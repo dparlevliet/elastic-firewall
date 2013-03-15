@@ -40,7 +40,7 @@ var Server = function() {
           log('Unsupported message received: ', data.toString('utf8'));
         }
       });
-    }).listen(config.port, function() {
+    }).listen(config.server_port, function() {
       log('Server bound');
     });
   }

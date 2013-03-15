@@ -1,8 +1,11 @@
+import urllib2
+import json
+
 class Api():
   group_name  = "Digital Ocean"
   client_key  = None
   api_key     = None
-  servers     = None
+  servers     = {}
 
   def __init__(self, **kwargs):
     for key in kwargs:

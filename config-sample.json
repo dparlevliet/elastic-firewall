@@ -8,75 +8,70 @@
   "api_key": "",
   "bsalt": "",
   "server_port": 23565,
-  "hostnames": [
-    { "balancer-1": {
-        "server": true,
-        "ping": [
-          "web"
-        ],
-        "allow": [],
-        "firewall": [
-          {"ssh": "all"},
-          {"http": "all"}
-        ]
-      }
+  "hostnames": {
+    "balancer-1": {
+      "server": true,
+      "ping": [
+        "web"
+      ],
+      "allow": [],
+      "firewall": [
+        {"ssh": "all"},
+        {"http": "all"}
+      ]
     },
-    { "cache-1": {
-        "server": true,
-        "ping": [],
-        "allow": [
-          "web"
-        ],
-        "firewall": [
-          {"ssh": "all"},
-          {"11211": "allowed"}
-        ]
-      }
+    "cache-1": {
+      "server": true,
+      "ping": [],
+      "allow": [
+        "web"
+      ],
+      "firewall": [
+        {"ssh": "all"},
+        {"11211": "allowed"}
+      ]
     },
-    { "mysql-master": {
-        "server": true,
-        "ping": [],
-        "allow": [
-          "web"
-        ],
-        "firewall": [
-          {"ssh": "all"},
-          {"mysql": "allowed"}
-        ]
-      }
+    "mysql-master": {
+      "server": true,
+      "ping": [],
+      "allow": [
+        "web"
+      ],
+      "firewall": [
+        {"ssh": "all"},
+        {"mysql": "allowed"}
+      ]
     },
-    { "web": {
-        "server": true,
-        "ping": [
-          "mysql-master",
-          "cache-1"
-        ],
-        "allow": [
-          "balancer-1",
-          "stats-server"
-        ],
-        "firewall": [
-          {"ssh": "all"},
-          {"http": "allow"}
-        ]
-      }
+    "web": {
+      "server": true,
+      "ping": [
+        "mysql-master",
+        "cache-1"
+      ],
+      "allow": [
+        "balancer-1",
+        "stats-server"
+      ],
+      "firewall": [
+        {"ssh": "all"},
+        {"http": "allow"}
+      ]
     },
-    { "stats-server": {
-        "server": true,
-        "ping": [
-          "web",
-          "mysql-master",
-          "mysql-slave",
-          "cache-1",
-          "balancer-1",
-          "web-processor"
-        ],
-        "allow": [ ],
-        "firewall": [
-          {"ssh": "all"},
-          {"http": "all"}
-        ]
-      }
+    "stats-server": {
+      "server": true,
+      "ping": [
+        "web",
+        "mysql-master",
+        "mysql-slave",
+        "cache-1",
+        "balancer-1",
+        "web-processor"
+      ],
+      "allow": [ ],
+      "firewall": [
+        {"ssh": "all"},
+        {"http": "all"}
+      ]
     }
-  ]
+  }
 }

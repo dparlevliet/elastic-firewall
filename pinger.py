@@ -1,13 +1,13 @@
 #! /usr/bin/python
 import os
 import sys
-import urllib2
 import json
 import socket
-from ext.encryption import Encryption
+from ext.encryption import Encrypt
 
 
 def ping(ip, port, salt, api):
+  print "Pinging: ", ip, port, salt, api
   command = {
     "api_key": api,
     "area": "ping"
@@ -19,7 +19,7 @@ def ping(ip, port, salt, api):
 
 
 def main():
-  config    = json.loads(open('./config.json').read())
+  config = json.loads(open('./config.json').read())
 
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
@@ -29,13 +29,11 @@ def main():
     setattr(api, key, config[config['server_group']][key])
   api.grab_servers()
 
-  hostname  = socket.gethostname()
-  hostname  = 'web'
+  hostname = socket.gethostname()
   if hostname in config['hostnames']:
-    for ping in config['hostnames'][hostname]:
-      for ip in api.get_servers(ping):
-        ip = 'locahost'
-        ping(ip, config['port'], config['bsalt'], config['api_key'])
+    for server in config['hostnames'][hostname]['ping']:
+      for ip in api.get_servers(server):
+        ping(ip, config['server_port'], config['bsalt'], config['api_key'])
 
 
 if __name__ == '__main__':
