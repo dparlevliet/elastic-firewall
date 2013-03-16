@@ -1,8 +1,9 @@
 #! /usr/bin/python
 import sys
 import os
+import json
+import socket
 import ext.iptables as ipt
-os.setuid(os.geteuid())
 
 
 class ElasticRules():
@@ -22,12 +23,12 @@ class ElasticRules():
     del self.rules['ports'][key]
 
   def add_allowed_ip(self, ip):
-    self.rules['allowed_ips'][ip] = true
+    self.rules['allowed_ips'][ip] = True
 
   def remove_allowed_ip(self, ip):
     if ip not in self.rules:
       return None
-    self.rules['allowed_ips'][ip] = false
+    self.rules['allowed_ips'][ip] = False
 
   def load(self):
     try:
@@ -39,10 +40,10 @@ class ElasticRules():
     for ip, allowed in self.rules['allowed_ips'].iteritems():
       if not allowed:
         del self.rules['allowed_ips'][ip]
-    return open('./rules.json').write(json.dumps(self.rules, separators=(',', ':')))
+    return open('./rules.json', 'w').write(json.dumps(self.rules, separators=(',', ':')))
 
   def update_firewall(self):
-    for rule in self.rules['ports']:
+    for key, rule in self.rules['ports'].iteritems():
       if rule[1] == 'any':
         ipt.all_new(rule[0], rule[2])
       else:
@@ -53,6 +54,7 @@ class ElasticRules():
 def main():
   rules = ElasticRules()
   rules.load()
+  config = json.loads(open('./config.json').read())
 
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
