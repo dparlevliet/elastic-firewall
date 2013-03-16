@@ -5,6 +5,7 @@
     "api_key": ""
   },
   "debug": true,
+  "block_all": true,
   "api_key": "",
   "bsalt": "",
   "server_port": 23565,
@@ -16,9 +17,10 @@
       ],
       "allow": [],
       "firewall": [
-        {"ssh": "all"},
-        {"http": "all"}
-      ]
+        ["22", "all", "tcp"],
+        ["80", "all", "tcp"]
+      ],
+      "safe_ips": []
     },
     "cache-1": {
       "server": true,
@@ -27,9 +29,10 @@
         "web"
       ],
       "firewall": [
-        {"ssh": "all"},
-        {"11211": "allowed"}
-      ]
+        ["22", "all", "tcp"],
+        ["11211", "allowed", "tcp"]
+      ],
+      "safe_ips": []
     },
     "mysql-master": {
       "server": true,
@@ -38,9 +41,10 @@
         "web"
       ],
       "firewall": [
-        {"ssh": "all"},
-        {"mysql": "allowed"}
-      ]
+        ["22", "all", "tcp"],
+        ["80", "allowed", "tcp"]
+      ],
+      "safe_ips": []
     },
     "web": {
       "server": true,
@@ -53,9 +57,10 @@
         "stats-server"
       ],
       "firewall": [
-        {"ssh": "all"},
-        {"http": "allow"}
-      ]
+        ["22", "all", "tcp"],
+        ["80", "allowed", "tcp"]
+      ],
+      "safe_ips": []
     },
     "stats-server": {
       "server": true,
@@ -69,9 +74,10 @@
       ],
       "allow": [ ],
       "firewall": [
-        {"ssh": "all"},
-        {"http": "all"}
-      ]
+        ["22", "all", "tcp"],
+        ["80", "all", "tcp"]
+      ],
+      "safe_ips": []
     }
   }
 }
