@@ -106,33 +106,43 @@ Config explained
 ```
   # name of the api file (without .py) located in the api/ folder
   "server_group": "digital_ocean",
+
   # specific information only used by the Digital Ocean API file.
   "digital_ocean": {
     "client_key": "abcd",
     "api_key": "abcde"
   },
+
   # block all incoming connection attempts as a general rule
   "block_all": true,
+
   # API key to verify the messages received by the server are from within your
   # cluster.
   "api_key": "=MGuNrNvGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
+
   # salt for the message encryption. must be <= 448 bits
   "bsalt": ":2hk)BKAq 1,4F3L",
+
   # port for the server(s) to run on
   "server_port": 23565,
+
   "hostnames": {
     # servers host name
     "elastic-firewall": {
+
       # Is this server going to act as a ping receiver?
       "server": true,
+
       # which servers to ping (by hostname)
       "ping": [
       ],
+
       # which servers to grant access to?
       "allow": [
         # any server with the hostname 'web'
         "web"
       ],
+
       # firewall rules
       "firewall": [
         # [ port, whom, protocol ]
@@ -142,6 +152,7 @@ Config explained
         # allowed means only those in the allow list, or the safe_ips list
         ["80", "allowed", "tcp"]
       ],
+
       "safe_ips": [
         # specific IPs to allow access to (ie. you or your team)
         "192.0.188.111"
