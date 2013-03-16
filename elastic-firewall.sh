@@ -11,12 +11,14 @@ start)
     mkdir $EF_LOGPATH
   fi
   forever start -a -l $EF_LOG --pidFile $EF_PID --sourceDir $EF_PATH -w server.js
+  python $EF_PATH/pinger.py
 
 ;;
 
 stop)
 
   forever stop --sourceDir $EF_PATH -w server.js
+  python $EF_PATH/pinger.py
 
 ;;
 
