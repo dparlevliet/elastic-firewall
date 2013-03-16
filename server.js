@@ -1,9 +1,14 @@
-
+var sys           = require('sys');
+var exec          = require('child_process').exec;
 var net           = require('net');
 var moment        = require('moment');
 var Encryption    = require('./ext/encryption.js');
 var e             = new Encryption();
 var DEBUG         = false;
+
+function puts(error, stdout, stderr) {
+  sys.puts(stdout)
+}
 
 var log = function(message) {
   if (DEBUG)
@@ -32,8 +37,8 @@ var Server = function() {
           log('Message received:')
           switch (json.area) {
             case 'ping':
-              // todo: update firewall
               console.log('Updating firewall');
+              exec("python "+_direname+"/update_firewall.py", puts);
               break;
           }
         } catch (e) {
