@@ -11,6 +11,16 @@ Methods to make dealing with IPTables a little easier.
 import subprocess
 import time
 
+current_rules = {}
+
+def rules_list():
+  subprocess.Popen("iptables --list-rules", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  rules = {}
+  for line in iter(p.stdout.readline, b''):
+    if len(line) > 0:
+      rules[line] = True
+  return rules
+
 
 def allow_all():
   subprocess.Popen("""iptables -D INPUT -j DROP;
@@ -28,15 +38,21 @@ def loopback_safe():
 
 
 def ip_rule(input_type, ip, port, type):
+  rule = "iptables -%s INPUT -p %s -s %s/%s --dport %s -m state --state NEW,ESTABLISHED -j ACCEPT" % \
+            (input_type, type, ip, ip, port)
+  if rule in current_rules:
+    return None
   time.sleep(0.1)
-  subprocess.Popen("iptables -%s INPUT -p %s -s %s/%s --dport %s -m state --state NEW,ESTABLISHED -j ACCEPT" %
-        (input_type, type, ip, ip, port), shell=True)
+  subprocess.Popen(rule, shell=True)
 
 
 def any_rule(input_type, port, type):
+  rule = "iptables -%s INPUT -p %s -m %s --dport %s -j ACCEPT" % \
+                      (input_type, type, type, port)
+  if rule in current_rules:
+    return None
   time.sleep(0.1)
-  subprocess.Popen("iptables -%s INPUT -p %s -m %s --dport %s -j ACCEPT" %
-                      (input_type, type, type, port), shell=True)
+  subprocess.Popen(rule, shell=True)
 
 
 def all_new(port, type):

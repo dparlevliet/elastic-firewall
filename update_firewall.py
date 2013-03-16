@@ -12,6 +12,9 @@ class ElasticRules():
     'ports': {},
   }
 
+  def __init__(self):
+    ipt.current_rules = ipt.rules_list()
+
   def add_port_rule(self, port, whom, type):
     key = "%s:%s:%s" % (port, type, whom)
     self.rules['ports'][key] = (port, whom, type)
@@ -33,6 +36,7 @@ class ElasticRules():
   def load(self):
     try:
       self.rules = json.loads(open('./rules.json').read())
+      self.loaded_rules = copy(self.rules)
     except:
       pass
 
