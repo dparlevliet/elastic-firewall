@@ -6,10 +6,6 @@ var Encryption    = require('./ext/encryption.js');
 var e             = new Encryption();
 var DEBUG         = false;
 
-function puts(error, stdout, stderr) {
-  sys.puts(stdout)
-}
-
 var log = function(message) {
   if (DEBUG)
     if (arguments.length>1)
@@ -38,7 +34,9 @@ var Server = function() {
           switch (json.area) {
             case 'ping':
               console.log('Updating firewall');
-              exec("python "+_direname+"/update_firewall.py", puts);
+              exec("python "+__dirname+"/update_firewall.py", function(error, stdout, stderr) {
+                sys.puts(stdout)
+              });
               break;
           }
         } catch (e) {
