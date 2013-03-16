@@ -26,10 +26,13 @@ def allow_all():
   subprocess.Popen("""iptables -P INPUT ACCEPT;
                       iptables -P FORWARD ACCEPT;
                       iptables -P OUTPUT ACCEPT;
-                      iptables -D INPUT -j DROP;""", shell=True)
+                      iptables -D INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT;""", shell=True)
 
 def block_all():
-  subprocess.Popen("""""", shell=True)
+  subprocess.Popen("""iptables -P INPUT DROP;
+                      iptables -P FORWARD DROP;
+                      iptables -P OUTPUT ACCEPT;
+                      iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT;""", shell=True)
 
 
 def loopback_safe():
