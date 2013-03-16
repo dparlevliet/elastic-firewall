@@ -13,8 +13,6 @@ import subprocess
 
 def default_setup():
   subprocess.Popen("""iptables -P INPUT DROP;
-                      iptables -P OUTPUT DROP;
-                      iptables -P FORWARD DROP;
                       iptables -A INPUT -j DROP;""", shell=True)
   loopback_safe()
 
@@ -25,9 +23,8 @@ def loopback_safe():
 
 
 def ip_rule(input_type, ip, port, type):
-  subprocess.Popen("iptables -%s INPUT -p %s -s %s/%s --dport %s" +
-                    " -m state --state NEW,ESTABLISHED -j ACCEPT" %
-                      (input_type, type, ip, ip, port), shell=True)
+  subprocess.Popen("iptables -%s INPUT -p %s -s %s/%s --dport %s -m state --state NEW,ESTABLISHED -j ACCEPT" %
+        (input_type, type, ip, ip, port), shell=True)
 
 
 def any_rule(input_type, port, type):
