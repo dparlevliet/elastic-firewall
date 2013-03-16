@@ -18,10 +18,10 @@ Dependencies
   * Node.JS forever
 
 
-Ubuntu Installation
-===================
+Ubuntu Dependency Installation
+==============================
 ```
-apt-get install software-properties-common python-software-properties
+apt-get install software-properties-common python-software-properties git
 add-apt-repository ppa:richarvey/nodejs
 apt-get update
 apt-get install nodejs npm
@@ -31,6 +31,8 @@ apt-get install nodejs npm
 Installation & Configuration
 ============================
 ```
+cd /usr/local/share/
+git clone git://github.com/dparlevliet/elastic-firewall.git
 ln -f -s /usr/local/share/elastic-firewall/elastic-firewall.sh /etc/init.d/elastic-firewall
 chmod +x /etc/init.d/elastic-firewall
 update-rc.d elastic-firewall defaults
