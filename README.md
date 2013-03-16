@@ -31,7 +31,7 @@ apt-get install nodejs npm
 Installation & Configuration
 ============================
 ```
-ln -f -s ~/path/to/elastic-firewall/elastic-firewall.sh /etc/init.d/elastic-firewall
+ln -f -s /usr/local/share/elastic-firewall/elastic-firewall.sh /etc/init.d/elastic-firewall
 chmod +x /etc/init.d/elastic-firewall
 update-rc.d elastic-firewall defaults
 ```
