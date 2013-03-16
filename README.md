@@ -43,6 +43,7 @@ apt-get install software-properties-common python-software-properties git
 add-apt-repository ppa:richarvey/nodejs
 apt-get update
 apt-get install nodejs npm
+npm install -g forever
 ```
 
 
