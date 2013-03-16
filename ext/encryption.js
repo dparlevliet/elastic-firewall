@@ -24,9 +24,8 @@ function Encryption() {
     var cipher = crypto.createCipheriv(algorithm, Buffer(key), '');
     cipher.setAutoPadding(false);
     try {
-      return Buffer(cipher.update(pad(data),
-                      'utf8', 'binary') + cipher.final('binary'), 'binary')
-                        .toString('hex');
+      return Buffer(cipher.update(pad(data), 'utf8', 'binary') +
+                      cipher.final('binary'), 'binary').toString('hex');
     } catch (e) {
       console.log('Encryption error: ', e, data, key);
       return null;
@@ -38,7 +37,7 @@ function Encryption() {
     decipher.setAutoPadding(false);
     try {
       return (decipher.update(Buffer(data, 'hex').toString('binary'),
-              'binary', 'utf8') + decipher.final('utf8')).replace(/\x00+$/g, '');
+                'binary', 'utf8') + decipher.final('utf8')).replace(/\x00+$/g, '');
     } catch (e) {
       console.log('Decryption error: ', e, data, key);
       return null;

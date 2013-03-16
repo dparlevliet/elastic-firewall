@@ -1,4 +1,15 @@
 #! /usr/bin/python
+"""
+@fileoverview Update iptables firewall rules
+@author David Parlevliet
+@version 20130305
+@preserve Copyright 2013 David Parlevliet.
+
+Update Firewall
+===============
+This script will read the config file, contact the API for server information,
+and then update the iptables rules list.
+"""
 import sys
 import os
 import json

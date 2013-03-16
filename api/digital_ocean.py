@@ -1,3 +1,13 @@
+"""
+@fileoverview Digital Ocean API
+@author David Parlevliet
+@version 20130315
+@preserve Copyright 2013 David Parlevliet.
+
+Digital Ocean API
+=================
+Class to get the server details via the Digital Ocean API.
+"""
 import urllib2
 import json
 

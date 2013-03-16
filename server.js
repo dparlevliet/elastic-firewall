@@ -1,3 +1,14 @@
+/*
+@fileoverview Elastic Firewall Server
+@author David Parlevliet
+@version 20130305
+@preserve Copyright 2013 David Parlevliet.
+
+Elastic Firewall Server
+=======================
+Server for receiving Elastic Firewall ping messages & running the update_firewall
+script.
+*/
 var sys           = require('sys');
 var exec          = require('child_process').exec;
 var net           = require('net');

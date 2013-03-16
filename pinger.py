@@ -1,4 +1,14 @@
 #! /usr/bin/python
+"""
+@fileoverview Ping message sending script
+@author David Parlevliet
+@version 20130305
+@preserve Copyright 2013 David Parlevliet.
+
+Pinger
+======
+Sends ping messages to all known Elastic Firewall servers
+"""
 import os
 import sys
 import json
