@@ -3,12 +3,13 @@ var exec          = require('child_process').exec;
 var net           = require('net');
 var moment        = require('moment');
 var Encryption    = require('./ext/encryption.js');
+var fs = require('fs');
 var e             = new Encryption();
-var DEBUG         = false;
+var DEBUG         = true;
 
 var log = function(message) {
   if (DEBUG)
-    if (arguments.length>1)
+    if (arguments.length==1)
       console.log('['+moment().format('D-MMMM-YY h:mm:ss')+'] '+ message);
     else
       console.log('['+moment().format('D-MMMM-YY h:mm:ss')+']', arguments);
@@ -16,12 +17,15 @@ var log = function(message) {
 
 var Server = function() {
   this.start    = function() {
-    fs = require('fs')
-    var config = fs.readFileSync('./config.json', 'utf8');
-    config = JSON.parse(config);
     DEBUG = config.debug;
     this.server = net.createServer(function (socket) {
       log('Connection received');
+      for (key in config.hostnames) {
+        if (key == hostname.replace("\n", '') && config.hostnames[key].server == false) {
+          log('This server is not accepting connections. Closing request.');
+          socket.destroy();
+        }
+      }
       socket.on('end', function() {
         log('Connection ended');
       }).on('data', function (data) {
@@ -49,4 +53,12 @@ var Server = function() {
   }
 }
 var server = new Server();
-server.start();
+
+var hostname = fs.readFileSync('/etc/hostname', 'utf8');
+var config = fs.readFileSync('./config.json', 'utf8');
+try {
+  config = JSON.parse(config);
+  server.start();
+} catch (e) {
+  log(e);
+}
