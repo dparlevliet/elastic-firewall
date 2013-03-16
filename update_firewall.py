@@ -60,8 +60,8 @@ def main():
   try:
     pid = open(pid_path).read()
     print "Elastic firewall is already running an update: %s" % pid
-    sys.exit(1)
-  except:
+    return 1
+  except IOError:
     open(pid_path, 'w').write(str(os.getpid()))
 
   rules = ElasticRules()
