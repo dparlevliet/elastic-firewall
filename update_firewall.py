@@ -44,7 +44,7 @@ class ElasticRules():
 
   def update_firewall(self):
     for key, rule in self.rules['ports'].iteritems():
-      if rule[1] == 'any':
+      if rule[1] == 'all':
         ipt.all_new(rule[0], rule[2])
       else:
         for ip in self.rules['allowed_ips']:
