@@ -14,7 +14,7 @@ import time
 current_rules = {}
 
 def rules_list():
-  subprocess.Popen("iptables --list-rules", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  p = subprocess.Popen("iptables --list-rules", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
   rules = {}
   for line in iter(p.stdout.readline, b''):
     if len(line) > 0:
