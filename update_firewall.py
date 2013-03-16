@@ -1,46 +1,89 @@
 #! /usr/bin/python
 import sys
 import os
-import subprocess
+import ext.iptables as ipt
+os.setuid(os.geteuid())
 
 
-def get_iptables():
-  p = subprocess.Popen("iptables -L", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-  while(True):
-    retcode = p.poll()
-    line = p.stdout.readline()
-    yield line
-    if(retcode is not None):
-      break
+class ElasticRules():
+  rules = {
+    'allowed_ips': {},
+    'ports': {},
+  }
+
+  def add_port_rule(self, port, whom, type):
+    key = "%s:%s:%s" % (port, type, whom)
+    self.rules['ports'][key] = (port, whom, type)
+
+  def remove_port_rule(self, port, whom, type):
+    key = "%s:%s:%s" % (port, type, whom)
+    if key not in self.rules['ports']:
+      return None
+    del self.rules['ports'][key]
+
+  def add_allowed_ip(self, ip):
+    self.rules['allowed_ips'][ip] = true
+
+  def remove_allowed_ip(self, ip):
+    if ip not in self.rules:
+      return None
+    self.rules['allowed_ips'][ip] = false
+
+  def load(self):
+    try:
+      self.rules = json.loads(open('./rules.json').read())
+    except:
+      pass
+
+  def save(self):
+    for ip, allowed in self.rules['allowed_ips'].iteritems():
+      if not allowed:
+        del self.rules['allowed_ips'][ip]
+    return open('./rules.json').write(json.dumps(self.rules, separators=(',', ':')))
+
+  def update_firewall(self):
+    for rule in self.rules['ports']:
+      if rule[1] == 'any':
+        ipt.all_new(rule[0], rule[2])
+      else:
+        for ip in self.rules['allowed_ips']:
+          ipt.ip_new(ip, rule[0], rule[2])
 
 
-def filter_iptables(list):
-  pass
+def main():
+  rules = ElasticRules()
+  rules.load()
 
+  # I hate exec. Keep an eye out for better solutions to this
+  exec "from api.%s import Api" % config['server_group']
 
-def main(port, who):
-  iptables = filter_iptables(get_iptables())
-  # ignore all
-  subprocess.Popen("iptables -P INPUT DROP", shell=True)
+  api = Api()
+  for key in config[config['server_group']]:
+    setattr(api, key, config[config['server_group']][key])
+  api.grab_servers()
 
-  # accept all loopback
-  subprocess.Popen("iptables -A INPUT -i lo -p all -j ACCEPT", shell=True)
-  subprocess.Popen("iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT", shell=True)
+  found_ips = []
+  hostname  = socket.gethostname()
+  if hostname in config['hostnames']:
+    for server in config['hostnames'][hostname]['allow']:
+      for ip in api.get_servers(server):
+        rules.add_allowed_ip(ip)
+        found_ips.append(ip)
 
-  # accept specific from any
-  subprocess.Popen("iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT", shell=True)
+  for ip in config['hostnames'][hostname]['safe_ips']:
+    rules.add_allowed_ip(ip)
+    found_ips.append(ip)
 
-  # accept specific from ip
-  subprocess.Popen("iptables -A INPUT -i eth0 -p tcp -s %s/%s --dport 22"+
-                        " -m state --state NEW,ESTABLISHED -j ACCEPT" %
-                          (), shell=True)
+  for port_rule in config['hostnames'][hostname]['firewall']:
+    rules.add_port_rule(*port_rule)
 
-  # security precaution
-  subprocess.Popen("iptables -A INPUT -j DROP", shell=True)
+  for ip in found_ips:
+    if ip not in rules.rules['allowed_ips']:
+      rules.remove_allowed_ip(ip)
+
+  rules.update_firewall()
+  rules.save()
 
 
 if __name__ == '__main__':
-  if len(sys.argv) < 3:
-    print "Usage: python update_firewall.py [port] [ip/all]"
-    sys.exit(1)
-  sys.exit(main(sys.argv[1], sys.argv[2]))
+  sys.exit(main())
