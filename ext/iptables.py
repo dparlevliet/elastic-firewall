@@ -18,18 +18,18 @@ def rules_list():
   rules = {}
   for line in iter(p.stdout.readline, b''):
     if len(line) > 0:
-      rules[line] = True
+      rules[line.replace("\n", '')] = True
   return rules
 
 
 def allow_all():
-  subprocess.Popen("""iptables -D INPUT -j DROP;
-                      iptables -P INPUT ACCEPT;
-                      iptables -A INPUT -j ACCEPT;""", shell=True)
+  subprocess.Popen("""iptables -P INPUT ACCEPT;
+                      iptables -P FORWARD ACCEPT;
+                      iptables -P OUTPUT ACCEPT;
+                      iptables -D INPUT -j DROP;""", shell=True)
 
 def block_all():
-  subprocess.Popen("""iptables -P INPUT DROP;
-                      iptables -A INPUT -j DROP;""", shell=True)
+  subprocess.Popen("""""", shell=True)
 
 
 def loopback_safe():
@@ -40,7 +40,7 @@ def loopback_safe():
 def ip_rule(input_type, ip, port, type):
   rule = "iptables -%s INPUT -p %s -s %s/%s --dport %s -m state --state NEW,ESTABLISHED -j ACCEPT" % \
             (input_type, type, ip, ip, port)
-  if rule in current_rules:
+  if rule.replace('iptables ', '') in current_rules:
     return None
   time.sleep(0.1)
   subprocess.Popen(rule, shell=True)
@@ -49,7 +49,7 @@ def ip_rule(input_type, ip, port, type):
 def any_rule(input_type, port, type):
   rule = "iptables -%s INPUT -p %s -m %s --dport %s -j ACCEPT" % \
                       (input_type, type, type, port)
-  if rule in current_rules:
+  if rule.replace('iptables ', '') in current_rules:
     return None
   time.sleep(0.1)
   subprocess.Popen(rule, shell=True)
