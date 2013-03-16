@@ -10,6 +10,24 @@ If the needs for this project expand, the name will be adjusted to something mor
 generic.
 
 
+Visual Overview
+===============
+<img src="http://c2journal.com/wp-content/uploads/2013/03/Workspace-1_240.jpeg">
+
+
+How it works
+============
+Install this package on each of your cloud servers. If <tt>server</tt> is defined
+as true for any server in your config file, then the nodejs ping receiver will
+be launched at boot-time and start listening for requests.
+
+When a message is received, it will decrypt the message and verify it. If it is
+confirmed to be a new ping message then the <tt>update_firewall.py</tt> script
+is run, which will download all your cluster information via the specified API
+rules, it will then compare those results against previous results and make
+iptable adjustments to your iptables accordingly.
+
+
 Dependencies
 ============
 
@@ -36,20 +54,105 @@ git clone git://github.com/dparlevliet/elastic-firewall.git
 ln -f -s /usr/local/share/elastic-firewall/elastic-firewall.sh /etc/init.d/elastic-firewall
 chmod +x /etc/init.d/elastic-firewall
 update-rc.d elastic-firewall defaults
+cp /usr/local/share/elastic-firewall/config-sample.json /usr/local/share/elastic-firewall/config.json
+```
+
+Example config
+==============
+The config for this application is stored using JSON.
+```
+{
+  "server_group": "digital_ocean",
+  "digital_ocean": {
+    "client_key": "abcd",
+    "api_key": "abcde"
+  },
+  "block_all": true,
+  "api_key": "=MGuNrNGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
+  "bsalt": ":2hk)BKAq 1,4F3L",
+  "server_port": 23565,
+  "hostnames": {
+    "elastic-firewall": {
+      "server": true,
+      "ping": [
+      ],
+      "allow": [
+        "web"
+      ],
+      "firewall": [
+        ["22", "all", "tcp"],
+        ["80", "allowed", "tcp"]
+      ],
+      "safe_ips": [
+        "192.0.188.111"
+      ]
+    },
+    "dave-lappy": {
+      "server": false,
+      "ping": [
+        "elastic-firewall"
+      ],
+      "allow": [],
+      "firewall": [],
+      "safe_ips": []
+    }
+  }
+}
+```
+
+Config explained
+================
+```
+  # name of the api file (without .py) located in the api/ folder
+  "server_group": "digital_ocean",
+  # specific information only used by the Digital Ocean API file.
+  "digital_ocean": {
+    "client_key": "abcd",
+    "api_key": "abcde"
+  },
+  # block all incoming connection attempts as a general rule
+  "block_all": true,
+  # API key to verify the messages received by the server are from within your
+  # cluster.
+  "api_key": "=MGuNrNvGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
+  # salt for the message encryption. must be <= 448 bits
+  "bsalt": ":2hk)BKAq 1,4F3L",
+  # port for the server(s) to run on
+  "server_port": 23565,
+  "hostnames": {
+    # servers host name
+    "elastic-firewall": {
+      # Is this server going to act as a ping receiver?
+      "server": true,
+      # which servers to ping (by hostname)
+      "ping": [
+      ],
+      # which servers to grant access to?
+      "allow": [
+        # any server with the hostname 'web'
+        "web"
+      ],
+      # firewall rules
+      "firewall": [
+        # [ port, whom, protocol ]
+        # whom = [all | allowed]
+        # all means any IP
+        ["22", "all", "tcp"],
+        # allowed means only those in the allow list, or the safe_ips list
+        ["80", "allowed", "tcp"]
+      ],
+      "safe_ips": [
+        # specific IPs to allow access to (ie. you or your team)
+        "192.0.188.111"
+      ]
+    }
+  }
 ```
 
 
-How it works
-============
-Install this package on each of your cloud servers. If <tt>server</tt> is defined
-as true for any server in your config file, then the nodejs ping receiver will
-be launched at boot-time and start listening for requests.
-
-When a message is received, it will decrypt the message and verify it. If it is
-confirmed to be a new ping message then the <tt>update_firewall.py</tt> script
-is run, which will download all your cluster information via the specified API
-rules, it will then compare those results against previous results and make
-iptable adjustments to your iptables accordingly.
+Notes
+=====
+You do not need to restart the service if you make changes to the config file. It will restart its self.
 
 
 License
