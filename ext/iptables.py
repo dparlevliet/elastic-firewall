@@ -38,8 +38,8 @@ def loopback_safe():
 
 
 def ip_rule(input_type, ip, port, type):
-  rule = "iptables -%s INPUT -p %s -s %s/%s --dport %s -m state --state NEW,ESTABLISHED -j ACCEPT" % \
-            (input_type, type, ip, ip, port)
+  rule = "iptables -%s INPUT -s %s/%s -p %s -m %s --dport %s -m state --state NEW,ESTABLISHED -j ACCEPT" % \
+            (input_type, ip, ip, type, type, port)
   if rule.replace('iptables ', '') in current_rules:
     return None
   time.sleep(0.1)
