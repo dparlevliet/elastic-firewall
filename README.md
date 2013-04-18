@@ -39,23 +39,23 @@ Dependencies
 Ubuntu Dependency Installation
 ==============================
 ```
-apt-get install software-properties-common python-software-properties git python-crypto
-add-apt-repository ppa:richarvey/nodejs
-apt-get update
-apt-get install nodejs npm
-npm install -g forever
+apt-get install software-properties-common python-software-properties git python-crypto; \
+add-apt-repository ppa:richarvey/nodejs; \
+apt-get update; \
+apt-get install nodejs npm; \
+npm install -g forever;
 ```
 
 
 Installation & Configuration
 ============================
 ```
-cd /usr/local/share/
-git clone git://github.com/dparlevliet/elastic-firewall.git
-ln -f -s /usr/local/share/elastic-firewall/elastic-firewall.sh /etc/init.d/elastic-firewall
-chmod +x /etc/init.d/elastic-firewall
-update-rc.d elastic-firewall defaults
-cp /usr/local/share/elastic-firewall/config-sample.json /usr/local/share/elastic-firewall/config.json
+cd /usr/local/share/;
+git clone git://github.com/dparlevliet/elastic-firewall.git; \
+ln -f -s /usr/local/share/elastic-firewall/elastic-firewall.sh /etc/init.d/elastic-firewall; \
+chmod +x /etc/init.d/elastic-firewall; \
+update-rc.d elastic-firewall defaults; \
+cp /usr/local/share/elastic-firewall/config-sample.json /usr/local/share/elastic-firewall/config.json;
 ```
 
 Example config
