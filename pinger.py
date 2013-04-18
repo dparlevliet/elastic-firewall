@@ -29,7 +29,7 @@ def ping(ip, port, salt, api):
 
 
 def main():
-  config = json.loads(open('./config.json').read())
+  config = json.loads(open('/usr/local/share/elastic-firewall/config.json').read())
 
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
