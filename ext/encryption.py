@@ -10,7 +10,6 @@ Blowfish encryption. Tested Decypherable between PHP<->Node.JS<->Python
 """
 from Crypto.Cipher import Blowfish
 from base64 import b64encode, b64decode
-from django.conf import settings
 from random import randrange
 from binascii import unhexlify, hexlify
 
