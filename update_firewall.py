@@ -15,7 +15,7 @@ import os
 import json
 import socket
 import ext.iptables as ipt
-
+app_path = '/usr/local/share/elastic-firewall'
 
 class ElasticRules():
   rules = {
@@ -46,7 +46,7 @@ class ElasticRules():
 
   def load(self):
     try:
-      self.rules = json.loads(open('./rules.json').read())
+      self.rules = json.loads(open('%s/rules.json'%app_path).read())
       self.loaded_rules = copy(self.rules)
     except:
       pass
@@ -55,7 +55,7 @@ class ElasticRules():
     for ip, allowed in self.rules['allowed_ips'].iteritems():
       if not allowed:
         del self.rules['allowed_ips'][ip]
-    return open('./rules.json', 'w').write(json.dumps(self.rules, separators=(',', ':')))
+    return open('%s/rules.json'%app_path, 'w').write(json.dumps(self.rules, separators=(',', ':')))
 
   def update_firewall(self):
     for key, rule in self.rules['ports'].iteritems():
@@ -70,6 +70,7 @@ def main():
   pid_path = '/var/run/elastic-firewall-update.pid'
   try:
     pid = open(pid_path).read()
+    # try verify this process is actually running. If not, remove the pid
     print "Elastic firewall is already running an update: %s" % pid
     return 1
   except IOError:
@@ -77,7 +78,7 @@ def main():
 
   rules = ElasticRules()
   rules.load()
-  config = json.loads(open('./config.json').read())
+  config = json.loads(open('%s/config.json'%app_path).read())
 
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
