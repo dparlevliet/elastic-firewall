@@ -22,10 +22,14 @@ def ping(ip, port, salt, api):
     "api_key": api,
     "area": "ping"
   }
-  client_sock = socket.socket()
-  client_sock.connect((ip, port))
-  client_sock.send(Encrypt(json.dumps(command, separators=(',', ':')), salt))
-  client_sock.close()
+  try:
+    client_sock = socket.socket()
+    client_sock.connect((ip, port))
+    client_sock.send(Encrypt(json.dumps(command, separators=(',', ':')), salt))
+    client_sock.close()
+  except:
+    print "Connection refused"
+    pass
 
 
 def main():
