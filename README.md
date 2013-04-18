@@ -60,7 +60,10 @@ cp /usr/local/share/elastic-firewall/config-sample.json /usr/local/share/elastic
 
 Example config
 ==============
-The config for this application is stored using JSON.
+The config for this application is stored using JSON. If you have trouble coming
+up with secure api_keys or salts, then use <a href="http://passwdtools.com">http://passwdtools.com</a>.
+Also, note that the salt for Blowfish cannot exceed 448 bits, so keep your salts
+below or equal to 16 characters.
 ```
 {
   "server_group": "digital_ocean",
