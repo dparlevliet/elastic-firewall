@@ -39,7 +39,7 @@ Dependencies
 Ubuntu Dependency Installation
 ==============================
 ```
-apt-get install software-properties-common python-software-properties git
+apt-get install software-properties-common python-software-properties git python-crypto
 add-apt-repository ppa:richarvey/nodejs
 apt-get update
 apt-get install nodejs npm
