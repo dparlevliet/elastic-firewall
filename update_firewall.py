@@ -70,7 +70,7 @@ def main():
   pid_path = '/var/run/elastic-firewall-update.pid'
   try:
     pid = open(pid_path).read()
-    # try verify this process is actually running. If not, remove the pid
+    # todo: try verify this process is actually running. If not, remove the pid
     print "Elastic firewall is already running an update: %s" % pid
     return 1
   except IOError:
@@ -122,6 +122,7 @@ def main():
 
   rules.update_firewall()
   rules.save()
+  ipt.loopback_safe()
   os.unlink(pid_path)
 
 
