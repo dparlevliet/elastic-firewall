@@ -36,8 +36,8 @@ def block_all():
 
 
 def loopback_safe():
-  subprocess.Popen("""iptables -A INPUT -i lo -p all -j ACCEPT;
-                      iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT""", shell=True)
+  subprocess.Popen("""iptables -A INPUT -i lo -j ACCEPT;
+                      iptables -A OUTPUT -o lo -j ACCEPT""", shell=True)
 
 
 def ip_rule(input_type, ip, port, type):
