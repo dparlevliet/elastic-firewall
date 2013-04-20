@@ -12,6 +12,7 @@ start)
   fi
   forever start -a -l $EF_LOG --pidFile $EF_PID --sourceDir $EF_PATH -w server.js
   python $EF_PATH/pinger.py
+  python $EF_PATH/update_firewall.py
 
 ;;
 
