@@ -71,7 +71,7 @@ var Server = function() {
 var server = new Server();
 
 var hostname = fs.readFileSync('/etc/hostname', 'utf8');
-var config = fs.readFileSync('./config.json', 'utf8');
+var config = fs.readFileSync(__dirname+'/config.json', 'utf8');
 try {
   config = JSON.parse(config);
   server.start();
