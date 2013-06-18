@@ -29,6 +29,10 @@ var log = function(message) {
 var Server = function() {
   this.start    = function() {
     DEBUG = config.debug;
+    console.log('Pinging everyone.');
+    exec("python "+__dirname+"/pinger.py", function(error, stdout, stderr) {
+      sys.puts(stdout);
+    });
     this.server = net.createServer(function (socket) {
       log('Connection received');
       for (key in config.hostnames) {
@@ -44,6 +48,7 @@ var Server = function() {
           var json = JSON.parse(e.decrypt(data.toString("utf8"), config.bsalt));
           if (json.api_key != config.api_key) {
             log('Incorrect API key received. Possible hack attempt.', json, data);
+            return;
           }
           log('Message received:')
           switch (json.area) {
