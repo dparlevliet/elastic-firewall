@@ -15,7 +15,9 @@ import os
 import json
 import socket
 import ext.iptables as ipt
+import fcntl
 app_path = '/usr/local/share/elastic-firewall'
+pid_path = '/var/run/elastic-firewall-update.pid'
 
 class ElasticRules():
   rules = {
@@ -67,14 +69,12 @@ class ElasticRules():
 
 
 def main():
-  pid_path = '/var/run/elastic-firewall-update.pid'
+  pid = open(pid_path, 'w')
   try:
-    pid = open(pid_path).read()
-    # todo: try verify this process is actually running. If not, remove the pid
-    print "Elastic firewall is already running an update: %s" % pid
-    return 1
+    fcntl.lockf(pid, fcntl.LOCK_EX | fcntl.LOCK_NB)
   except IOError:
-    open(pid_path, 'w').write(str(os.getpid()))
+    print "Elastic firewall is already running an update."
+    return 1
 
   rules = ElasticRules()
   rules.load()
@@ -124,7 +124,12 @@ def main():
   rules.save()
   ipt.loopback_safe()
   os.unlink(pid_path)
+  return 0
 
 
 if __name__ == '__main__':
+  #try: 
   sys.exit(main())
+  #except:
+  #  if os.path.isfile(pid_path):
+  #    os.unlink(pid_path)
