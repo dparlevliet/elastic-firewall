@@ -27,7 +27,11 @@ class Api():
                         self.client_key,
                         self.api_key)
 
-    droplets      = urllib2.urlopen(DROPLETS_URL)
+    try:
+      droplets      = urllib2.urlopen(DROPLETS_URL)
+    except urllib2.URLError:
+      raise Exception("Fatal error: Unable to connect to API")
+
     try:
       data        = json.loads(droplets.read())
     except:
