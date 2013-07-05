@@ -15,6 +15,7 @@ import os
 import json
 import socket
 import ext.iptables as ipt
+import re
 import fcntl
 app_path = '/usr/local/share/elastic-firewall'
 pid_path = '/var/run/elastic-firewall-update.pid'
@@ -83,6 +84,21 @@ def main():
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
 
+  api = Api()
+  for key in config[config['server_group']]:
+    setattr(api, key, config[config['server_group']][key])
+  api.grab_servers()
+
+  found_ips = []
+  hostname  = socket.gethostname()
+  
+  for c_hostname in config['hostnames']:
+    if re.match(c_hostname, hostname):
+      for server in config['hostnames'][c_hostname]['allow']:
+        for ip in api.get_servers(server):
+          rules.add_allowed_ip(ip)
+          found_ips.append(ip)
+
   try:
     if 'block_all' in config and config['block_all'] == True \
         and 'block_all_assigned' not in rules.rules:
@@ -95,19 +111,6 @@ def main():
       del rules.rules['block_all_assigned']
   except KeyError:
     pass
-
-  api = Api()
-  for key in config[config['server_group']]:
-    setattr(api, key, config[config['server_group']][key])
-  api.grab_servers()
-
-  found_ips = []
-  hostname  = socket.gethostname()
-  if hostname in config['hostnames']:
-    for server in config['hostnames'][hostname]['allow']:
-      for ip in api.get_servers(server):
-        rules.add_allowed_ip(ip)
-        found_ips.append(ip)
 
   for ip in config['hostnames'][hostname]['safe_ips']:
     rules.add_allowed_ip(ip)
@@ -128,8 +131,4 @@ def main():
 
 
 if __name__ == '__main__':
-  #try: 
   sys.exit(main())
-  #except:
-  #  if os.path.isfile(pid_path):
-  #    os.unlink(pid_path)
