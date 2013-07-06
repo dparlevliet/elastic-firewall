@@ -29,10 +29,10 @@ debug    = False
 
 
 def log(output):
-  output = "\n[%s] %s" % (time.ctime(), output)
+  output = "[%s] %s" % (time.ctime(), output)
   if debug:
     print output
-  open(log_path, 'a').write(output)
+  open(log_path, 'a').write("\n%s" % output)
 
 
 class ElasticRules():
@@ -73,7 +73,7 @@ class ElasticRules():
     for ip, allowed in self.rules['allowed_ips'].iteritems():
       if not allowed:
         del self.rules['allowed_ips'][ip]
-    return open('%s/rules.json'%app_path, 'w').write(json.dumps(self.rules, separators=(',', ':')))
+    return open('%s/rules.json'%app_path, 'w').write(json.dumps(self.rules))
 
   def update_firewall(self):
     rules = []
@@ -90,9 +90,17 @@ class ElasticRules():
     ), log(rule)) for rule in rules]
 
 
-def main():
+def main(argv):
+  global debug 
 
-  # Lock the process so we do not double up running tasks.
+  # Parse passed arguments.
+  for arg in argv:
+    # Test mode will only output iptable commands. No commands will be run.
+    # https://github.com/dparlevliet/elastic-firewall/issues/9
+    if arg.lower() == '--test-mode':
+      debug = True
+
+  log("Lock the process so we do not double up running tasks.")
   pid = open(pid_path, 'w')
   try:
     fcntl.lockf(pid, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -101,19 +109,21 @@ def main():
     return 1
 
   rules = ElasticRules()
-  rules.load() # load any previous rules
 
-  # Load config file
+  log('Loading any previous rules.')
+  rules.load()
+
+  log('Loading config.')
   try:
     config = json.loads(open('%s/config.json'%app_path).read())
   except:
-    log("Cannot load config file")
+    log("Cannot load config file.")
     return 1
 
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
 
-  # get the servers from the API
+  log('Grabbing servers from the API.')
   try:
     api = Api()
     for key in config[config['server_group']]:
@@ -127,9 +137,10 @@ def main():
   hostname  = socket.gethostname()
   server_rules = None
 
-  # Try find the config for this server
+  log('Trying to find the config for this server.')
   for c_hostname in config['hostnames']:
     if re.match(c_hostname, hostname):
+      log('Config found at: %s' % c_hostname)
       server_rules = config['hostnames'][c_hostname]
       for server in server_rules['allow']:
         for ip in api.get_servers(server):
@@ -144,12 +155,12 @@ def main():
   try:
     if 'block_all' in config and config['block_all'] == True \
                                     and 'block_all_assigned' not in rules.rules:
-      # block all incoming connections
+      log('Blocking all incoming connections.')
       ipt.block_all()
       rules.rules['block_all_assigned'] = True
       del rules.rules['allow_all_assigned']
     elif 'allow_all_assigned' not in rules.rules:
-      # allow all incoming connections
+      log('Allowing all incoming connections.')
       ipt.allow_all()
       rules.rules['allow_all_assigned'] = True
       del rules.rules['block_all_assigned']
@@ -179,9 +190,9 @@ def main():
   rules.save() # save the rules for comparison later
   ipt.loopback_safe() # internal network must be able to access outside world
   os.unlink(pid_path)
-  log('Complete')
+  log('Complete.')
   return 0
 
 
 if __name__ == '__main__':
-  sys.exit(main())
+  sys.exit(main(sys.argv))
