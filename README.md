@@ -67,14 +67,15 @@ below or equal to 16 characters.
     "client_key": "abcd",
     "api_key": "abcde"
   },
-  "block_all": true,
-  "api_key": "=MGuNrNGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
-  "bsalt": ":2hk)BKAq 1,4F3L",
-  "server_port": 23565,
   "hostnames": {
     "elastic-firewall": {
+      "api_key": "=MGuNrNGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
+      "bsalt": ":2hk)BKAq 1,4F3L",
+      "block_all": true,
+      "server_port": 23565,
       "server": true,
       "ping": [
+        "dave-*"
       ],
       "allow": [
         "web"
@@ -88,11 +89,17 @@ below or equal to 16 characters.
       ]
     },
     "dave-*": {
+      "api_key": "=MGuNrNGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
+      "bsalt": ":2hk)BKAq 1,4F3L",
+      "block_all": true,
+      "server_port": 23565,
       "server": false,
       "ping": [
         "elastic-firewall"
       ],
-      "allow": [],
+      "allow": [
+        "mysql-*"
+      ],
       "firewall": [],
       "safe_ips": []
     }
@@ -112,28 +119,30 @@ Config explained
     "api_key": "abcde"
   },
 
-  # block all incoming connection attempts as a general rule
-  "block_all": true,
-
-  # API key to verify the messages received by the server are from within your
-  # cluster.
-  "api_key": "=MGuNrNvGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
-
-  # salt for the message encryption. must be <= 448 bits
-  "bsalt": ":2hk)BKAq 1,4F3L",
-
-  # port for the server(s) to run on
-  "server_port": 23565,
-
   "hostnames": {
     # servers host name
     "elastic-firewall": {
+
+      # block all incoming connection attempts as a general rule
+      "block_all": true,
+
+      # API key to verify the messages received by the server are from within your
+      # cluster.
+      "api_key": "=MGuNrNvGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
+
+      # salt for the message encryption. must be <= 448 bits
+      "bsalt": ":2hk)BKAq 1,4F3L",
+
+      # port for the server(s) to run on
+      "server_port": 23565,
 
       # Is this server going to act as a ping receiver?
       "server": true,
 
       # which servers to ping (by hostname)
       "ping": [
+        # regex support for hostname list in ping list
+        "dave-*"
       ],
 
       # which servers to grant access to?
@@ -146,8 +155,10 @@ Config explained
       "firewall": [
         # [ port, whom, protocol ]
         # whom = [all | allowed]
+        
         # all means any IP
         ["22", "all", "tcp"],
+
         # allowed means only those in the allow list, or the safe_ips list
         ["80", "allowed", "tcp"]
 
@@ -162,13 +173,20 @@ Config explained
         "192.0.188.111"
       ]
     },
-    # wildcard support for hostnames
+    # regex support for hostnames
     "dave-*": {
+      "api_key": "=MGuNrNGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
+      "bsalt": ":2hk)BKAq 1,4F3L",
+      "block_all": true,
+      "server_port": 23565,
       "server": false,
       "ping": [
         "elastic-firewall"
       ],
-      "allow": [],
+      "allow": [
+        # regex support for hostname list in allow list
+        "mysql-*"
+      ],
       "firewall": [],
       "safe_ips": []
     }
