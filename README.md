@@ -82,7 +82,15 @@ below or equal to 16 characters.
       ],
       "firewall": [
         ["22", "all", "tcp"],
-        ["80", "allowed", "tcp"]
+        ["80", "allowed", "tcp"],
+        [
+          "8080",
+          [
+            "balancer-*",
+            "cache-1"
+          ],
+          "tcp"
+        ]
       ],
       "safe_ips": [
         "192.0.188.111"
@@ -155,12 +163,23 @@ Config explained
       "firewall": [
         # [ port, whom, protocol ]
         # whom = [all | allowed]
-        
+
         # all means any IP
         ["22", "all", "tcp"],
 
-        # allowed means only those in the allow list, or the safe_ips list
-        ["80", "allowed", "tcp"]
+        # allowed means only those in the allow list plus the safe_ips list
+        ["80", "allowed", "tcp"],
+
+        # list of hostnames that are allowed access to this port
+        [
+          "8080",
+          [
+            # regex support for hostnames
+            "balancer-*",
+            "cache-1"
+          ],
+          "tcp"
+        ]
 
         # Because this host is defined as a server ("server": true), one extra rule
         # will be added automatically. 
