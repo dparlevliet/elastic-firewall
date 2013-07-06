@@ -181,8 +181,9 @@ Config explained
 
 update_firewall.py arguments
 ============================
+```
 --test-mode                 Enables debug mode. iptables commands will run without being applied.
-
+```
 
 Notes
 =====
