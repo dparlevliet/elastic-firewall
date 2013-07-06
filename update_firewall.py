@@ -65,7 +65,7 @@ class ElasticRules():
 
   def load(self):
     try:
-      self.rules = json.loads(open('%s/rules.json'%app_path).read())
+      self.rules = json.loads(open('/var/log/elastic-firewall/rules.json'%app_path).read())
       self.loaded_rules = copy(self.rules)
     except:
       pass
@@ -74,7 +74,7 @@ class ElasticRules():
     for ip, allowed in self.rules['allowed_ips'].iteritems():
       if not allowed:
         del self.rules['allowed_ips'][ip]
-    return open('%s/rules.json'%app_path, 'w').write(json.dumps(self.rules))
+    return open('/var/log/elastic-firewall/rules.json'%app_path, 'w').write(json.dumps(self.rules))
 
   def update_firewall(self):
     rules = []
