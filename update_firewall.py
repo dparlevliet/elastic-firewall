@@ -166,13 +166,15 @@ def main(argv):
     return 0
 
   try:
-    if 'block_all' in server_rules and server_rules['block_all'] == True \
-                                    and 'block_all_assigned' not in rules.rules:
+    if 'block_all' not in server_rules:
+      server_rules['block_all'] = False
+
+    if server_rules['block_all'] == True and 'block_all_assigned' not in rules.rules:
       log('Blocking all incoming connections.')
       ipt.block_all()
       rules.rules['block_all_assigned'] = True
       del rules.rules['allow_all_assigned']
-    elif 'allow_all_assigned' not in rules.rules:
+    elif server_rules['block_all'] == False and 'allow_all_assigned' not in rules.rules:
       log('Allowing all incoming connections.')
       ipt.allow_all()
       rules.rules['allow_all_assigned'] = True
