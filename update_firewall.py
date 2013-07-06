@@ -139,13 +139,15 @@ def main(argv):
 
   log('Trying to find the config for this server.')
   for c_hostname in config['hostnames']:
-    if re.match(c_hostname, hostname):
-      log('Config found at: %s' % c_hostname)
-      server_rules = config['hostnames'][c_hostname]
-      for server in server_rules['allow']:
-        for ip in api.get_servers(server):
-          rules.add_allowed_ip(ip)
-          found_ips.append(ip)
+    if not re.match(c_hostname, hostname):
+      continue
+      
+    log('Config found at: %s' % c_hostname)
+    server_rules = config['hostnames'][c_hostname]
+    for server in server_rules['allow']:
+      for ip in api.get_servers(server):
+        rules.add_allowed_ip(ip)
+        found_ips.append(ip)
 
   # this server isn't in the config
   if not server_rules:

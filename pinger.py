@@ -13,6 +13,7 @@ import os
 import sys
 import json
 import socket
+import re
 from ext.encryption import Encrypt
 
 
@@ -38,17 +39,27 @@ def main():
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
 
-  api = Api()
-  for key in config[config['server_group']]:
-    setattr(api, key, config[config['server_group']][key])
-  api.grab_servers()
+  try:
+    api = Api()
+    for key in config[config['server_group']]:
+      setattr(api, key, config[config['server_group']][key])
+    api.grab_servers()
+  except Exception, e:
+    print e
+    return 1
 
   hostname = socket.gethostname()
-  if hostname in config['hostnames']:
-    for server in config['hostnames'][hostname]['ping']:
+  for c_hostname in config['hostnames']:
+    if not re.match(c_hostname, hostname):
+      continue
+      
+    log('Config found at: %s' % c_hostname)
+    server_rules = config['hostnames'][c_hostname]
+    for server in server_rules['ping']:
       for ip in api.get_servers(server):
         ping(ip, config['server_port'], config['bsalt'], config['api_key'])
 
+  return 0
 
 if __name__ == '__main__':
   sys.exit(main())
