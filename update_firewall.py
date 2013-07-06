@@ -2,7 +2,7 @@
 """
 @fileoverview Update iptables firewall rules
 @author David Parlevliet
-@version 20130305
+@version 20130706
 @preserve Copyright 2013 David Parlevliet.
 
 Update Firewall
@@ -70,6 +70,8 @@ class ElasticRules():
 
 
 def main():
+
+  # Lock the process so we do not double up running tasks.
   pid = open(pid_path, 'w')
   try:
     fcntl.lockf(pid, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -78,12 +80,19 @@ def main():
     return 1
 
   rules = ElasticRules()
-  rules.load()
-  config = json.loads(open('%s/config.json'%app_path).read())
+  rules.load() # load any previous rules
+
+  # Load config file
+  try:
+    config = json.loads(open('%s/config.json'%app_path).read())
+  except:
+    print "Cannot load config file"
+    return 1
 
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
 
+  # get the servers from the API
   try:
     api = Api()
     for key in config[config['server_group']]:
@@ -95,8 +104,9 @@ def main():
 
   found_ips = []
   hostname  = socket.gethostname()
-  
   server_rules = None
+
+  # Try find the config for this server
   for c_hostname in config['hostnames']:
     if re.match(c_hostname, hostname):
       server_rules = config['hostnames'][c_hostname]
@@ -105,42 +115,47 @@ def main():
           rules.add_allowed_ip(ip)
           found_ips.append(ip)
 
-        # this server is acting as a ping server too, we must open the port.
-        # https://github.com/dparlevliet/elastic-firewall/issues/1
-        if server_rules['server'] == True:
-          rules.add_port_rule(config['server_port'], 'all', 'tcp')
-
   # this server isn't in the config
   if not server_rules:
     return 0
 
   try:
     if 'block_all' in config and config['block_all'] == True \
-        and 'block_all_assigned' not in rules.rules:
+                                    and 'block_all_assigned' not in rules.rules:
+      # block all incoming connections
       ipt.block_all()
       rules.rules['block_all_assigned'] = True
       del rules.rules['allow_all_assigned']
     elif 'allow_all_assigned' not in rules.rules:
+      # allow all incoming connections
       ipt.allow_all()
       rules.rules['allow_all_assigned'] = True
       del rules.rules['block_all_assigned']
   except KeyError:
     pass
 
+  # Add any defined safe IPs so the list of firewall rules list.
   for ip in server_rules['safe_ips']:
     rules.add_allowed_ip(ip)
     found_ips.append(ip)
 
+  # Assign all our port rules to the firewall rules list.
   for port_rule in server_rules['firewall']:
     rules.add_port_rule(*port_rule)
 
+  # Add all our found server ips to the firewall rules list.
   for ip in found_ips:
     if ip not in rules.rules['allowed_ips']:
       rules.remove_allowed_ip(ip)
 
+  # This server is acting as a ping server too, we must open the port.
+  # https://github.com/dparlevliet/elastic-firewall/issues/1
+  if server_rules['server'] == True:
+    rules.add_port_rule(config['server_port'], 'all', 'tcp')
+
   rules.update_firewall()
-  rules.save()
-  ipt.loopback_safe()
+  rules.save() # save the rules for comparison later
+  ipt.loopback_safe() # internal network must be able to access outside world
   os.unlink(pid_path)
   return 0
 
