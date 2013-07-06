@@ -16,9 +16,19 @@ import socket
 import re
 from ext.encryption import Encrypt
 
+log_path = '/var/log/elastic-firewall/pinger.log'
+debug    = True
+
+
+def log(output):
+  output = "[%s] %s" % (time.ctime(), output)
+  if debug:
+    print output
+  open(log_path, 'a').write("\n%s" % output)
+
 
 def ping(ip, port, salt, api):
-  print "Pinging: ", ip, port, salt, api
+  log("Pinging: %s :: %s :: %s :: %s" %  (ip, port, salt, api))
   command = {
     "api_key": api,
     "area": "ping"
@@ -29,12 +39,15 @@ def ping(ip, port, salt, api):
     client_sock.send(Encrypt(json.dumps(command, separators=(',', ':')), salt))
     client_sock.close()
   except:
-    print "Connection refused"
-    pass
+    log("Connection refused")
 
 
 def main():
-  config = json.loads(open('/usr/local/share/elastic-firewall/config.json').read())
+  try:
+    config = json.loads(open('/usr/local/share/elastic-firewall/config.json').read())
+  except:
+    log("Unable to load config")
+    return 1
 
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
@@ -45,7 +58,7 @@ def main():
       setattr(api, key, config[config['server_group']][key])
     api.grab_servers()
   except Exception, e:
-    print e
+    log("Error: %s" % e)
     return 1
 
   hostname = socket.gethostname()
