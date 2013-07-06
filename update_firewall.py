@@ -98,7 +98,7 @@ class ElasticRules():
       rule.split(' '), 
       stdout=subprocess.PIPE, 
       stderr=subprocess.PIPE
-    ), log(rule)) for rule in rules]
+    ), log(rule)) for rule in rules if not rule == None]
 
 
 def main(argv):
