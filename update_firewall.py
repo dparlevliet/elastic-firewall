@@ -26,6 +26,7 @@ pid_path = '/var/run/elastic-firewall-update.pid'
 log_path = '/var/log/elastic-firewall/firewall.log'
 
 debug    = False
+api      = None
 
 
 def log(output):
@@ -78,11 +79,21 @@ class ElasticRules():
   def update_firewall(self):
     rules = []
     for key, rule in self.rules['ports'].iteritems():
+      # no restriction on this port, anyone can connect.
       if rule[1] == 'all':
         rules.append(ipt.all_new(rule[0], rule[2]))
-      else:
+
+      # restrict port to all servers in the allowed list
+      elif rule[1] == 'allowed':
         for ip in self.rules['allowed_ips']:
           rules.append(ipt.ip_new(ip, rule[0], rule[2]))
+
+      # restrict port to certain servers
+      elif type(rule[1]) == list:
+        for host in rule[1]:
+          for ip in api.get_servers(host):
+            rules.append(ipt.ip_new(ip, rule[0], rule[2]))
+
     return [(None if debug else subprocess.Popen(
       rule.split(' '), 
       stdout=subprocess.PIPE, 
@@ -91,7 +102,7 @@ class ElasticRules():
 
 
 def main(argv):
-  global debug 
+  global debug, api
 
   # Parse passed arguments.
   for arg in argv:
@@ -141,7 +152,7 @@ def main(argv):
   for c_hostname in config['hostnames']:
     if not re.match(c_hostname, hostname):
       continue
-      
+
     log('Config found at: %s' % c_hostname)
     server_rules = config['hostnames'][c_hostname]
     for server in server_rules['allow']:
