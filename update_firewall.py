@@ -155,7 +155,7 @@ def main(argv):
     return 0
 
   try:
-    if 'block_all' in config and config['block_all'] == True \
+    if 'block_all' in server_rules and server_rules['block_all'] == True \
                                     and 'block_all_assigned' not in rules.rules:
       log('Blocking all incoming connections.')
       ipt.block_all()

@@ -71,7 +71,7 @@ def main():
     server_rules = config['hostnames'][c_hostname]
     for server in server_rules['ping']:
       for ip in api.get_servers(server):
-        ping(ip, server_rules['server_port'], config['bsalt'], config['api_key'])
+        ping(ip, server_rules['server_port'], server_rules['bsalt'], server_rules['api_key'])
 
   return 0
 
