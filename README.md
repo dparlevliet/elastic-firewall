@@ -91,7 +91,7 @@ below or equal to 16 characters.
         "192.0.188.111"
       ]
     },
-    "dave-lappy": {
+    "dave-*": {
       "server": false,
       "ping": [
         "elastic-firewall"
@@ -154,20 +154,40 @@ Config explained
         ["22", "all", "tcp"],
         # allowed means only those in the allow list, or the safe_ips list
         ["80", "allowed", "tcp"]
+
+        # Because this host is defined as a server ("server": true), one extra rule
+        # will be added automatically. 
+        # Note: You do not need to do this, it will be done for you!
+        # ["23565", "all", "tcp"]
       ],
 
       "safe_ips": [
         # specific IPs to allow access to (ie. you or your team)
         "192.0.188.111"
       ]
+    },
+    # wildcard support for hostnames
+    "dave-*": {
+      "server": false,
+      "ping": [
+        "elastic-firewall"
+      ],
+      "allow": [],
+      "firewall": [],
+      "safe_ips": []
     }
   }
 ```
 
+update_firewall.py arguments
+============================
+--test-mode                 Enables debug mode. iptables commands will run without being applied.
+
 
 Notes
 =====
-You do not need to restart the service if you make changes to the config file. It will restart its self.
+You do not need to restart the service if you make changes to the config file, 
+it will restart its self.
 
 
 License
