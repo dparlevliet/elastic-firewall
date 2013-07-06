@@ -16,7 +16,6 @@ var moment        = require('moment');
 var Encryption    = require('./ext/encryption.js');
 var fs            = require('fs');
 var e             = new Encryption();
-var server        = new Server();
 var server_config = {};
 var hostname      = fs.readFileSync('/etc/hostname', 'utf8');
 hostname          = hostname.replace("\n", '');
@@ -68,6 +67,7 @@ var Server = function() {
     });
   }
 }
+var server = new Server();
 
 try {
   config = JSON.parse(config);
