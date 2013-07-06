@@ -10,6 +10,7 @@ Class to get the server details via the Digital Ocean API.
 """
 import urllib2
 import json
+import re
 
 class Api():
   group_name  = "Digital Ocean"
@@ -45,5 +46,8 @@ class Api():
         self.servers[name].append(droplet['ip_address'])
 
   def get_servers(self, name):
-    return self.servers[name] if name in self.servers else None
+    servers = []
+    for c_hostname in self.servers:
+      servers = servers + (self.servers[c_hostname] if re.match(name, c_hostname) else [])
+    return servers
 

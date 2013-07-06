@@ -4,16 +4,15 @@
     "client_key": "",
     "api_key": ""
   },
-  "debug": true,
-  "block_all": true,
-  "api_key": "",
-  "bsalt": "",
-  "server_port": 23565,
   "hostnames": {
-    "balancer-1": {
+    "balancer-*": {
+      "server_port": 23565,
+      "block_all": true,
       "server": true,
+      "api_key": "",
+      "bsalt": "",
       "ping": [
-        "web"
+        "cache-*"
       ],
       "allow": [],
       "firewall": [
@@ -22,8 +21,12 @@
       ],
       "safe_ips": []
     },
-    "cache-1": {
+    "cache-*": {
+      "server_port": 23565,
+      "block_all": true,
       "server": true,
+      "api_key": "",
+      "bsalt": "",
       "ping": [],
       "allow": [
         "web"
@@ -34,8 +37,12 @@
       ],
       "safe_ips": []
     },
-    "mysql-master": {
+    "mysql-*": {
+      "server_port": 23565,
+      "block_all": true,
       "server": true,
+      "api_key": "",
+      "bsalt": "",
       "ping": [],
       "allow": [
         "web"
@@ -47,7 +54,11 @@
       "safe_ips": []
     },
     "web": {
+      "server_port": 23565,
+      "block_all": true,
       "server": true,
+      "api_key": "",
+      "bsalt": "",
       "ping": [
         "mysql-master",
         "cache-1"
@@ -63,7 +74,11 @@
       "safe_ips": []
     },
     "stats-server": {
+      "server_port": 23565,
+      "block_all": true,
       "server": true,
+      "api_key": "",
+      "bsalt": "",
       "ping": [
         "web",
         "mysql-master",

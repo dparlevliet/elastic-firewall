@@ -14,6 +14,7 @@ import sys
 import json
 import socket
 import re
+import time
 from ext.encryption import Encrypt
 
 log_path = '/var/log/elastic-firewall/pinger.log'
@@ -28,7 +29,7 @@ def log(output):
 
 
 def ping(ip, port, salt, api):
-  log("Pinging: %s :: %s :: %s :: %s" %  (ip, port, salt, api))
+  log("Pinging: %s:%s" %  (ip, port))
   command = {
     "api_key": api,
     "area": "ping"
@@ -45,8 +46,8 @@ def ping(ip, port, salt, api):
 def main():
   try:
     config = json.loads(open('/usr/local/share/elastic-firewall/config.json').read())
-  except:
-    log("Unable to load config")
+  except Exception, e:
+    log("Unable to load config: %s" % e)
     return 1
 
   # I hate exec. Keep an eye out for better solutions to this
@@ -70,7 +71,7 @@ def main():
     server_rules = config['hostnames'][c_hostname]
     for server in server_rules['ping']:
       for ip in api.get_servers(server):
-        ping(ip, config['server_port'], config['bsalt'], config['api_key'])
+        ping(ip, server_rules['server_port'], config['bsalt'], config['api_key'])
 
   return 0
 

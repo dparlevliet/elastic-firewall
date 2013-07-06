@@ -186,7 +186,7 @@ def main(argv):
   # This server is acting as a ping server too, we must open the port.
   # https://github.com/dparlevliet/elastic-firewall/issues/1
   if server_rules['server'] == True:
-    rules.add_port_rule(config['server_port'], 'all', 'tcp')
+    rules.add_port_rule(server_rules['server_port'], 'all', 'tcp')
 
   rules.update_firewall()
   rules.save() # save the rules for comparison later

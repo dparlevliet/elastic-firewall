@@ -14,42 +14,39 @@ var exec          = require('child_process').exec;
 var net           = require('net');
 var moment        = require('moment');
 var Encryption    = require('./ext/encryption.js');
-var fs = require('fs');
+var fs            = require('fs');
 var e             = new Encryption();
-var DEBUG         = true;
+var server        = new Server();
+var server_config = {};
+var hostname      = fs.readFileSync('/etc/hostname', 'utf8');
+hostname          = hostname.replace("\n", '');
+var config        = fs.readFileSync(__dirname+'/config.json', 'utf8');
 
 var log = function(message) {
-  if (DEBUG)
-    if (arguments.length==1)
-      console.log('['+moment().format('D-MMMM-YY h:mm:ss')+'] '+ message);
-    else
-      console.log('['+moment().format('D-MMMM-YY h:mm:ss')+']', arguments);
+  if (arguments.length==1)
+    console.log('['+moment().format('D-MMMM-YY h:mm:ss')+'] '+ message);
+  else
+    console.log('['+moment().format('D-MMMM-YY h:mm:ss')+']', arguments);
 };
 
 var Server = function() {
   this.start    = function() {
-    DEBUG = config.debug;
     console.log('Pinging everyone.');
     exec("python "+__dirname+"/pinger.py", function(error, stdout, stderr) {
       sys.puts(stdout);
     });
     this.server = net.createServer(function (socket) {
       log('Connection received');
-      for (key in config.hostnames) {
-        var re = new RegExp(key);
-        if (key == hostname || re.exec(hostname)) {
-          if (config.hostnames[key].server == false) {
-            log('This server is not accepting connections. Closing request.');
-            socket.destroy();
-          }
-        }
+      if (!server_config.server) {
+        log('This server is not accepting connections. Closing request.');
+        socket.destroy();
       }
       socket.on('end', function() {
         log('Connection ended');
       }).on('data', function (data) {
         try {
-          var json = JSON.parse(e.decrypt(data.toString("utf8"), config.bsalt));
-          if (json.api_key != config.api_key) {
+          var json = JSON.parse(e.decrypt(data.toString("utf8"), server_config.bsalt));
+          if (json.api_key != server_config.api_key) {
             log('Incorrect API key received. Possible hack attempt.', json, data);
             return;
           }
@@ -66,19 +63,19 @@ var Server = function() {
           log('Unsupported message received: ', data.toString('utf8'));
         }
       });
-    }).listen(config.server_port, function() {
+    }).listen(server_config.server_port, function() {
       log('Server bound');
     });
   }
 }
-var server = new Server();
 
-var hostname = fs.readFileSync('/etc/hostname', 'utf8');
-hostname = hostname.replace("\n", '');
-
-var config = fs.readFileSync(__dirname+'/config.json', 'utf8');
 try {
   config = JSON.parse(config);
+  for (key in config.hostnames) {
+    var re = new RegExp(key);
+    if (key == hostname || re.exec(hostname))
+      server_config = config.hostnames[key];
+  }
   server.start();
 } catch (e) {
   log(e);
