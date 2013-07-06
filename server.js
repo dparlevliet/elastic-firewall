@@ -36,9 +36,12 @@ var Server = function() {
     this.server = net.createServer(function (socket) {
       log('Connection received');
       for (key in config.hostnames) {
-        if (key == hostname.replace("\n", '') && config.hostnames[key].server == false) {
-          log('This server is not accepting connections. Closing request.');
-          socket.destroy();
+        var re = new RegExp(key);
+        if (key == hostname || re.exec(hostname)) {
+          if (config.hostnames[key].server == false) {
+            log('This server is not accepting connections. Closing request.');
+            socket.destroy();
+          }
         }
       }
       socket.on('end', function() {
@@ -71,6 +74,8 @@ var Server = function() {
 var server = new Server();
 
 var hostname = fs.readFileSync('/etc/hostname', 'utf8');
+hostname = hostname.replace("\n", '');
+
 var config = fs.readFileSync(__dirname+'/config.json', 'utf8');
 try {
   config = JSON.parse(config);
