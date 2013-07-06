@@ -37,7 +37,7 @@ def ping(ip, port, salt, api):
   try:
     client_sock = socket.socket()
     client_sock.connect((ip, port))
-    client_sock.send(Encrypt(json.dumps(command, separators=(',', ':')), salt))
+    client_sock.send(Encrypt(json.dumps(command), salt))
     client_sock.close()
   except:
     log("Connection refused")
@@ -70,8 +70,13 @@ def main():
     log('Config found at: %s' % c_hostname)
     server_rules = config['hostnames'][c_hostname]
     for server in server_rules['ping']:
-      for ip in api.get_servers(server):
-        ping(ip, server_rules['server_port'], server_rules['bsalt'], server_rules['api_key'])
+      for c_hostname in config['hostnames']:
+        if not re.match(c_hostname, server):
+          continue
+
+        receiver_rules = config['hostnames'][c_hostname]
+        for ip in api.get_servers(server):
+          ping(ip, server_rules['server_port'], receiver_rules['bsalt'], receiver_rules['api_key'])
 
   return 0
 
