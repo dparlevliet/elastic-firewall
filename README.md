@@ -3,11 +3,7 @@ Elastic Firewall
 
 An unobtrusive, non-assuming elastic service for your cloud cluster. Currently
 it is designed to only listen for a ping message from your servers when they
-come online or go offline and update the firewall rules accordingly. But, it
-could technically do a lot more than that if the need arises.
-
-If the needs for this project expand, the name will be adjusted to something more
-generic.
+come online or go offline and update the firewall rules accordingly.
 
 
 Visual Overview
