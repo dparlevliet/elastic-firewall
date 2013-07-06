@@ -17,8 +17,23 @@ import socket
 import ext.iptables as ipt
 import re
 import fcntl
+import subprocess
+import time
+
+
 app_path = '/usr/local/share/elastic-firewall'
 pid_path = '/var/run/elastic-firewall-update.pid'
+log_path = '/var/log/elastic-firewall/firewall.log'
+
+debug    = False
+
+
+def log(output):
+  output = "\n[%s] %s" % (time.ctime(), output)
+  if debug:
+    print output
+  open(log_path, 'a').write(output)
+
 
 class ElasticRules():
   rules = {
@@ -61,12 +76,18 @@ class ElasticRules():
     return open('%s/rules.json'%app_path, 'w').write(json.dumps(self.rules, separators=(',', ':')))
 
   def update_firewall(self):
+    rules = []
     for key, rule in self.rules['ports'].iteritems():
       if rule[1] == 'all':
-        ipt.all_new(rule[0], rule[2])
+        rules.append(ipt.all_new(rule[0], rule[2]))
       else:
         for ip in self.rules['allowed_ips']:
-          ipt.ip_new(ip, rule[0], rule[2])
+          rules.append(ipt.ip_new(ip, rule[0], rule[2]))
+    return [(None if debug else subprocess.Popen(
+      rule.split(' '), 
+      stdout=subprocess.PIPE, 
+      stderr=subprocess.PIPE
+    ), log(rule)) for rule in rules]
 
 
 def main():
@@ -76,7 +97,7 @@ def main():
   try:
     fcntl.lockf(pid, fcntl.LOCK_EX | fcntl.LOCK_NB)
   except IOError:
-    print "Elastic firewall is already running an update."
+    log("Elastic firewall is already running an update.")
     return 1
 
   rules = ElasticRules()
@@ -86,7 +107,7 @@ def main():
   try:
     config = json.loads(open('%s/config.json'%app_path).read())
   except:
-    print "Cannot load config file"
+    log("Cannot load config file")
     return 1
 
   # I hate exec. Keep an eye out for better solutions to this
@@ -99,7 +120,7 @@ def main():
       setattr(api, key, config[config['server_group']][key])
     api.grab_servers()
   except Exception, e:
-    print e
+    log(e)
     return 1
 
   found_ips = []
@@ -117,6 +138,7 @@ def main():
 
   # this server isn't in the config
   if not server_rules:
+    log('Could not find a config file for this server')
     return 0
 
   try:
@@ -157,6 +179,7 @@ def main():
   rules.save() # save the rules for comparison later
   ipt.loopback_safe() # internal network must be able to access outside world
   os.unlink(pid_path)
+  log('Complete')
   return 0
 
 

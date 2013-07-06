@@ -9,7 +9,6 @@ IPTables
 Methods to make dealing with IPTables a little easier.
 """
 import subprocess
-import time
 
 current_rules = {}
 
@@ -23,21 +22,21 @@ def rules_list():
 
 
 def allow_all():
-  subprocess.Popen("""iptables -P INPUT ACCEPT;
-                      iptables -P FORWARD ACCEPT;
-                      iptables -P OUTPUT ACCEPT;
-                      iptables -D INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT;""", shell=True)
+  return """iptables -P INPUT ACCEPT;
+            iptables -P FORWARD ACCEPT;
+            iptables -P OUTPUT ACCEPT;
+            iptables -D INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT;"""
 
 def block_all():
-  subprocess.Popen("""iptables -P INPUT DROP;
-                      iptables -P FORWARD DROP;
-                      iptables -P OUTPUT ACCEPT;
-                      iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT;""", shell=True)
+  return """iptables -P INPUT DROP;
+            iptables -P FORWARD DROP;
+            iptables -P OUTPUT ACCEPT;
+            iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT;"""
 
 
 def loopback_safe():
-  subprocess.Popen("""iptables -A INPUT -i lo -j ACCEPT;
-                      iptables -A OUTPUT -o lo -j ACCEPT""", shell=True)
+  return """iptables -A INPUT -i lo -j ACCEPT;
+            iptables -A OUTPUT -o lo -j ACCEPT"""
 
 
 def ip_rule(input_type, ip, port, type):
@@ -45,8 +44,7 @@ def ip_rule(input_type, ip, port, type):
             (input_type, ip, ip, type, type, port)
   if rule.replace('iptables ', '') in current_rules:
     return None
-  time.sleep(0.1)
-  subprocess.Popen(rule, shell=True)
+  return rule
 
 
 def any_rule(input_type, port, type):
@@ -54,21 +52,20 @@ def any_rule(input_type, port, type):
                       (input_type, type, type, port)
   if rule.replace('iptables ', '') in current_rules:
     return None
-  time.sleep(0.1)
-  subprocess.Popen(rule, shell=True)
+  return rule
 
 
 def all_new(port, type):
-  any_rule('A', port, type)
+  return any_rule('A', port, type)
 
 
 def all_remove(port, type):
-  any_rule('D', port, type)
+  return any_rule('D', port, type)
 
 
 def ip_new(ip, port, type):
-  ip_rule('A', ip, port, type)
+  return ip_rule('A', ip, port, type)
 
 
 def ip_remove(ip, port, type):
-  ip_rule('D', ip, port, type)
+  return ip_rule('D', ip, port, type)
