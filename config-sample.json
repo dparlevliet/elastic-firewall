@@ -69,7 +69,15 @@
       ],
       "firewall": [
         ["22", "all", "tcp"],
-        ["80", "allowed", "tcp"]
+        ["80", "allowed", "tcp"],
+        [
+          "8080", 
+          [
+            "balancer-*",
+            "stats-server"
+          ], 
+          "tcp"
+        ]
       ],
       "safe_ips": []
     },
