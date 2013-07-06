@@ -84,20 +84,35 @@ def main():
   # I hate exec. Keep an eye out for better solutions to this
   exec "from api.%s import Api" % config['server_group']
 
-  api = Api()
-  for key in config[config['server_group']]:
-    setattr(api, key, config[config['server_group']][key])
-  api.grab_servers()
+  try:
+    api = Api()
+    for key in config[config['server_group']]:
+      setattr(api, key, config[config['server_group']][key])
+    api.grab_servers()
+  except Exception, e:
+    print e
+    return 1
 
   found_ips = []
   hostname  = socket.gethostname()
   
+  server_rules = None
   for c_hostname in config['hostnames']:
     if re.match(c_hostname, hostname):
-      for server in config['hostnames'][c_hostname]['allow']:
+      server_rules = config['hostnames'][c_hostname]
+      for server in server_rules['allow']:
         for ip in api.get_servers(server):
           rules.add_allowed_ip(ip)
           found_ips.append(ip)
+
+        # this server is acting as a ping server too, we must open the port.
+        # https://github.com/dparlevliet/elastic-firewall/issues/1
+        if server_rules['server'] == True:
+          rules.add_port_rule(config['server_port'], 'all', 'tcp')
+
+  # this server isn't in the config
+  if not server_rules:
+    return 0
 
   try:
     if 'block_all' in config and config['block_all'] == True \
@@ -112,11 +127,11 @@ def main():
   except KeyError:
     pass
 
-  for ip in config['hostnames'][hostname]['safe_ips']:
+  for ip in server_rules['safe_ips']:
     rules.add_allowed_ip(ip)
     found_ips.append(ip)
 
-  for port_rule in config['hostnames'][hostname]['firewall']:
+  for port_rule in server_rules['firewall']:
     rules.add_port_rule(*port_rule)
 
   for ip in found_ips:
