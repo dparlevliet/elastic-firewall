@@ -39,11 +39,10 @@ class Api():
       raise Exception("Fatal error: No droplets found")
 
     for droplet in data['droplets']:
-      if droplet['status'] == 'active':
-        name = droplet['name']
-        if name not in self.servers:
-          self.servers[name] = []
-        self.servers[name].append(droplet['ip_address'])
+      name = droplet['name']
+      if name not in self.servers:
+        self.servers[name] = []
+      self.servers[name].append(droplet['ip_address'])
 
   def get_servers(self, name):
     servers = []
