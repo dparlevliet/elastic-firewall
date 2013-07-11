@@ -74,6 +74,8 @@ class ElasticRules():
     for ip, allowed in self.rules['allowed_ips'].iteritems():
       if not allowed:
         del self.rules['allowed_ips'][ip]
+
+    # TODO: fix saving output
     return open('/var/log/elastic-firewall/rules.json'%app_path, 'w').write(json.dumps(self.rules))
 
   def update_firewall(self):

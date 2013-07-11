@@ -1,5 +1,4 @@
 #!/bin/sh
-exit 1
 EF_LOGPATH=/var/log/elastic-firewall
 EF_LOG=$EF_LOGPATH/run.log
 EF_PATH=/usr/local/share/elastic-firewall
