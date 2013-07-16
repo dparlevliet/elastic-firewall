@@ -89,12 +89,14 @@ class ElasticRules():
 
       if server_rules['block_all'] == True:
         log('Blocking all incoming connections.')
-        rules.append(ipt.block_all())
+        for block_rule in ipt.block_all().split("\n"):
+          rules.append(block_rule.lstrip().replace(';', ''))
         self.rules['block_all_assigned'] = True
         del self.rules['allow_all_assigned']
       elif server_rules['block_all'] == False:
         log('Allowing all incoming connections.')
-        rules.append(ipt.allow_all())
+        for block_rule in ipt.allow_all().split("\n"):
+          rules.append(block_rule.lstrip().replace(';', ''))
         self.rules['allow_all_assigned'] = True
         del self.rules['block_all_assigned']
     except KeyError:
