@@ -93,13 +93,15 @@ class ElasticRules():
       if 'block_all' not in server_rules:
         server_rules['block_all'] = False
 
-      if server_rules['block_all'] == True:
+      if server_rules['block_all'] == True \
+            and 'block_all_assigned' not in self.rules:
         log('Blocking all incoming connections.')
         rules = rules + self.split_multiline_rules(ipt.block_all())
         self.rules['block_all_assigned'] = True
         del self.rules['allow_all_assigned']
 
-      elif server_rules['block_all'] == False:
+      elif server_rules['block_all'] == False \
+            and 'allow_all_assigned' not in self.rules:
         log('Allowing all incoming connections.')
         rules = rules + self.split_multiline_rules(ipt.allow_all())
         self.rules['allow_all_assigned'] = True
@@ -128,6 +130,7 @@ class ElasticRules():
       rules = rules + self.split_multiline_rules(ipt.loopback_safe())
       self.rules['loopback_assigned'] = True
 
+    log('* Applying new rules')
     return [(None if debug else subprocess.Popen(
       rule.split(' '), 
       stdout=subprocess.PIPE, 
