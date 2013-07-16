@@ -80,6 +80,12 @@ class ElasticRules():
     # TODO: fix saving output
     return open(rules_path, 'w').write(pickle.dumps(self.rules))
 
+  def split_multiline_rules(self, rules):
+    new_rules = []
+    for rule in rules.split("\n"):
+      new_rules.append(rule.lstrip().replace(';', ''))
+    return new_rules
+
   def update_firewall(self, server_rules):
     rules = []
 
@@ -89,14 +95,13 @@ class ElasticRules():
 
       if server_rules['block_all'] == True:
         log('Blocking all incoming connections.')
-        for block_rule in ipt.block_all().split("\n"):
-          rules.append(block_rule.lstrip().replace(';', ''))
+        rules = rules + self.split_multiline_rules(ipt.block_all())
         self.rules['block_all_assigned'] = True
         del self.rules['allow_all_assigned']
+
       elif server_rules['block_all'] == False:
         log('Allowing all incoming connections.')
-        for block_rule in ipt.allow_all().split("\n"):
-          rules.append(block_rule.lstrip().replace(';', ''))
+        rules = rules + self.split_multiline_rules(ipt.allow_all())
         self.rules['allow_all_assigned'] = True
         del self.rules['block_all_assigned']
     except KeyError:
@@ -117,6 +122,11 @@ class ElasticRules():
         for host in rule[1]:
           for ip in api.get_servers(host):
             rules.append(ipt.ip_new(ip, rule[0], rule[2]))
+
+    if 'loopback_assigned' not in self.rules:
+      # internal network must be able to access outside world
+      rules = rules + self.split_multiline_rules(ipt.loopback_safe())
+      self.rules['loopback_assigned'] = True
 
     return [(None if debug else subprocess.Popen(
       rule.split(' '), 
@@ -210,7 +220,6 @@ def main(argv):
 
   rules.update_firewall(server_rules)
   rules.save() # save the rules for comparison later
-  ipt.loopback_safe() # internal network must be able to access outside world
   os.unlink(pid_path)
   log('Complete.')
   return 0
