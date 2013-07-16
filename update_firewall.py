@@ -13,6 +13,7 @@ and then update the iptables rules list.
 import sys
 import os
 import json
+import pickle
 import socket
 import ext.iptables as ipt
 import re
@@ -21,9 +22,10 @@ import subprocess
 import time
 
 
-app_path = '/usr/local/share/elastic-firewall'
-pid_path = '/var/run/elastic-firewall-update.pid'
-log_path = '/var/log/elastic-firewall/firewall.log'
+app_path    = '/usr/local/share/elastic-firewall'
+pid_path    = '/var/run/elastic-firewall-update.pid'
+log_path    = '/var/log/elastic-firewall/firewall.log'
+rules_path  = '/var/log/elastic-firewall/rules.pickle'
 
 debug    = False
 api      = None
@@ -65,7 +67,7 @@ class ElasticRules():
 
   def load(self):
     try:
-      self.rules = json.loads(open('/var/log/elastic-firewall/rules.json'%app_path).read())
+      self.rules = pickle.loads(open(rules_path).read())
       self.loaded_rules = copy(self.rules)
     except:
       pass
@@ -76,7 +78,7 @@ class ElasticRules():
         del self.rules['allowed_ips'][ip]
 
     # TODO: fix saving output
-    return open('/var/log/elastic-firewall/rules.json'%app_path, 'w').write(json.dumps(self.rules))
+    return open(rules_path, 'w').write(pickle.dumps(self.rules))
 
   def update_firewall(self):
     rules = []
