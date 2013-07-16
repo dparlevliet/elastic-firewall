@@ -80,8 +80,26 @@ class ElasticRules():
     # TODO: fix saving output
     return open(rules_path, 'w').write(pickle.dumps(self.rules))
 
-  def update_firewall(self):
+  def update_firewall(self, server_rules):
     rules = []
+
+    try:
+      if 'block_all' not in server_rules:
+        server_rules['block_all'] = False
+
+      if server_rules['block_all'] == True:
+        log('Blocking all incoming connections.')
+        rules.append(ipt.block_all())
+        self.rules['block_all_assigned'] = True
+        del self.rules['allow_all_assigned']
+      elif server_rules['block_all'] == False:
+        log('Allowing all incoming connections.')
+        rules.append(ipt.allow_all())
+        self.rules['allow_all_assigned'] = True
+        del self.rules['block_all_assigned']
+    except KeyError:
+      pass
+
     for key, rule in self.rules['ports'].iteritems():
       # no restriction on this port, anyone can connect.
       if rule[1] == 'all':
@@ -169,23 +187,6 @@ def main(argv):
     log('Could not find a config file for this server')
     return 0
 
-  try:
-    if 'block_all' not in server_rules:
-      server_rules['block_all'] = False
-
-    if server_rules['block_all'] == True and 'block_all_assigned' not in rules.rules:
-      log('Blocking all incoming connections.')
-      ipt.block_all()
-      rules.rules['block_all_assigned'] = True
-      del rules.rules['allow_all_assigned']
-    elif server_rules['block_all'] == False and 'allow_all_assigned' not in rules.rules:
-      log('Allowing all incoming connections.')
-      ipt.allow_all()
-      rules.rules['allow_all_assigned'] = True
-      del rules.rules['block_all_assigned']
-  except KeyError:
-    pass
-
   # Add any defined safe IPs so the list of firewall rules list.
   for ip in server_rules['safe_ips']:
     rules.add_allowed_ip(ip)
@@ -205,7 +206,7 @@ def main(argv):
   if server_rules['server'] == True:
     rules.add_port_rule(server_rules['server_port'], 'all', 'tcp')
 
-  rules.update_firewall()
+  rules.update_firewall(server_rules)
   rules.save() # save the rules for comparison later
   ipt.loopback_safe() # internal network must be able to access outside world
   os.unlink(pid_path)
