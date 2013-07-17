@@ -8,7 +8,7 @@ come online or go offline and update the firewall rules accordingly.
 
 Visual Overview
 ===============
-<img src="http://c2journal.com/wp-content/uploads/2013/07/elastic_firewall.jpg">
+<img src="http://c2journal.com/wp-content/uploads/2013/07/elastic_firewall-1.jpg">
 
 
 How it works
