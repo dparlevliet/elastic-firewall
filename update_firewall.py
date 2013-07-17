@@ -273,7 +273,8 @@ def main(argv):
     rules.add_port_rule(server_rules['server_port'], 'all', 'tcp')
 
   rules.update_firewall(server_rules)
-  rules.save() # save the rules for comparison later
+  if not debug:
+    rules.save() # save the rules for comparison later
   os.unlink(pid_path)
   log('Complete.')
   return 0
