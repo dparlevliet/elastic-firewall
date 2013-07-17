@@ -42,6 +42,7 @@ def log(output):
 class ElasticRules():
   restarted = False
   rules = {
+    'uptime': 0,
     'allowed_ips': {},
     'ports': {},
   }
