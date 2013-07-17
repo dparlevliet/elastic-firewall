@@ -68,7 +68,7 @@
         "stats-server"
       ],
       "firewall": [
-        ["22", "all", "tcp"],
+        ["21:22", "all", "tcp"],
         ["80", "allowed", "tcp"],
         [
           "8080", 

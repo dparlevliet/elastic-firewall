@@ -83,6 +83,7 @@ below or equal to 16 characters.
       "firewall": [
         ["22", "all", "tcp"],
         ["80", "allowed", "tcp"],
+        ["21:23", "allowed", "tcp"],
         [
           "8080",
           [
@@ -169,6 +170,9 @@ Config explained
 
         # allowed means only those in the allow list plus the safe_ips list
         ["80", "allowed", "tcp"],
+
+        # port-range support
+        ["21:23", "allowed", "tcp"],
 
         # list of hostnames that are allowed access to this port
         [
