@@ -34,6 +34,10 @@ def block_all():
             iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT;"""
 
 
+def block_all_on_port(port):
+  return "iptables -A INPUT -p tcp --destination-port %s -j DROP" % port
+
+
 def loopback_safe():
   return """iptables -A INPUT -i lo -j ACCEPT;
             iptables -A OUTPUT -o lo -j ACCEPT"""

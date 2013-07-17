@@ -149,6 +149,9 @@ class ElasticRules():
             else:
               rules.append(ipt.ip_remove(ip, rule[0], rule[2]))
 
+      if not rule[1] == 'all' and server_rules['block_all'] == False:
+        rules.append(ipt.block_all_on_port(rule[0]))
+
     if 'loopback_assigned' not in self.rules:
       # internal network must be able to access outside world
       rules = rules + self.split_multiline_rules(ipt.loopback_safe())
