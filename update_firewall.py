@@ -40,6 +40,7 @@ def log(output):
 
 
 class ElasticRules():
+  restarted = False
   rules = {
     'allowed_ips': {},
     'ports': {},
@@ -72,6 +73,11 @@ class ElasticRules():
     try:
       self.rules = pickle.loads(open(rules_path).read())
       self.loaded_rules = copy(self.rules)
+
+      # backwards compatability assurance
+      if 'uptime' not in self.rules:
+        self.rules['uptime'] = 0
+
     except:
       pass
 
@@ -95,15 +101,17 @@ class ElasticRules():
       if 'block_all' not in server_rules:
         server_rules['block_all'] = False
 
-      if server_rules['block_all'] == True \
-            and 'block_all_assigned' not in self.rules:
+      if (server_rules['block_all'] == True \
+            and 'block_all_assigned' not in self.rules) \
+            or self.restarted == False:
         log('Blocking all incoming connections.')
         rules = rules + self.split_multiline_rules(ipt.block_all())
         self.rules['block_all_assigned'] = True
         del self.rules['allow_all_assigned']
 
-      elif server_rules['block_all'] == False \
-            and 'allow_all_assigned' not in self.rules:
+      elif (server_rules['block_all'] == False \
+            and 'allow_all_assigned' not in self.rules) \
+            or self.restarted == True:
         log('Allowing all incoming connections.')
         rules = rules + self.split_multiline_rules(ipt.allow_all())
         self.rules['allow_all_assigned'] = True
@@ -146,7 +154,7 @@ class ElasticRules():
       rules = rules + self.split_multiline_rules(ipt.loopback_safe())
       self.rules['loopback_assigned'] = True
 
-    log('* Applying new rules')
+    log('Applying rules:')
     return [(None if debug else subprocess.Popen(
       rule.split(' '), 
       stdout=subprocess.PIPE, 
@@ -176,6 +184,14 @@ def main(argv):
 
   log('Loading any previous rules.')
   rules.load()
+
+  # check server uptime to see if it's been restarted since last check
+  with open('/proc/uptime', 'r') as f:
+    uptime_seconds = float(f.readline().split()[0])
+    uptime_seconds = 0
+    if uptime_seconds < rules.rules['uptime']:
+      rules.restarted = True
+    rules.rules['uptime'] = uptime_seconds
 
   log('Loading config.')
   try:
