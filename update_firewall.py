@@ -20,6 +20,7 @@ import re
 import fcntl
 import subprocess
 import time
+from copy import copy
 
 
 app_path    = '/usr/local/share/elastic-firewall'
@@ -39,6 +40,7 @@ def log(output):
 
 
 class ElasticRules():
+  restarted = False
   rules = {
     'allowed_ips': {},
     'ports': {},
@@ -47,57 +49,112 @@ class ElasticRules():
   def __init__(self):
     ipt.current_rules = ipt.rules_list()
 
-  def add_port_rule(self, port, whom, type):
+  def build_port_rule_key(self, port, whom, type):
     key = "%s:%s:%s" % (port, type, whom)
-    self.rules['ports'][key] = (port, whom, type)
+    return key
+
+  def add_port_rule(self, port, whom, type):
+    key = self.build_port_rule_key(port, whom, type)
+    self.rules['ports'][key] = (port, whom, type, True)
 
   def remove_port_rule(self, port, whom, type):
-    key = "%s:%s:%s" % (port, type, whom)
+    key = self.build_port_rule_key(port, whom, type)
     if key not in self.rules['ports']:
       return None
-    del self.rules['ports'][key]
+    self.rules['ports'][key] = (port, whom, type, False)
 
   def add_allowed_ip(self, ip):
     self.rules['allowed_ips'][ip] = True
 
   def remove_allowed_ip(self, ip):
-    if ip not in self.rules:
-      return None
     self.rules['allowed_ips'][ip] = False
 
   def load(self):
     try:
       self.rules = pickle.loads(open(rules_path).read())
       self.loaded_rules = copy(self.rules)
+
+      # backwards compatability assurance
+      if 'uptime' not in self.rules:
+        self.rules['uptime'] = 0
+
     except:
       pass
 
   def save(self):
-    for ip, allowed in self.rules['allowed_ips'].iteritems():
+    for ip, allowed in copy(self.rules['allowed_ips']).iteritems():
       if not allowed:
         del self.rules['allowed_ips'][ip]
 
-    # TODO: fix saving output
     return open(rules_path, 'w').write(pickle.dumps(self.rules))
 
-  def update_firewall(self):
+  def split_multiline_rules(self, rules):
+    new_rules = []
+    for rule in rules.split("\n"):
+      new_rules.append(rule.lstrip().replace(';', ''))
+    return new_rules
+
+  def update_firewall(self, server_rules):
     rules = []
+
+    try:
+      if 'block_all' not in server_rules:
+        server_rules['block_all'] = False
+
+      if (server_rules['block_all'] == True \
+            and 'block_all_assigned' not in self.rules) \
+            or self.restarted == False:
+        log('Blocking all incoming connections.')
+        rules = rules + self.split_multiline_rules(ipt.block_all())
+        self.rules['block_all_assigned'] = True
+        del self.rules['allow_all_assigned']
+
+      elif (server_rules['block_all'] == False \
+            and 'allow_all_assigned' not in self.rules) \
+            or self.restarted == True:
+        log('Allowing all incoming connections.')
+        rules = rules + self.split_multiline_rules(ipt.allow_all())
+        self.rules['allow_all_assigned'] = True
+        del self.rules['block_all_assigned']
+    except KeyError:
+      pass
+
     for key, rule in self.rules['ports'].iteritems():
+      if len(rule) < 4:
+        self.rules['ports'][key] = rule + (True,)
+        rule = rule + (True,)
+      apply_rule = rule[3]
+
       # no restriction on this port, anyone can connect.
       if rule[1] == 'all':
-        rules.append(ipt.all_new(rule[0], rule[2]))
+        if apply_rule:
+          rules.append(ipt.all_new(rule[0], rule[2]))
+        else:
+          rules.append(ipt.remove_new(rule[0], rule[2]))
 
       # restrict port to all servers in the allowed list
       elif rule[1] == 'allowed':
         for ip in self.rules['allowed_ips']:
-          rules.append(ipt.ip_new(ip, rule[0], rule[2]))
+          if self.rules['allowed_ips'][ip] == True and apply_rule:
+            rules.append(ipt.ip_new(ip, rule[0], rule[2]))
+          else:
+            rules.append(ipt.ip_remove(ip, rule[0], rule[2]))
 
       # restrict port to certain servers
       elif type(rule[1]) == list:
         for host in rule[1]:
           for ip in api.get_servers(host):
-            rules.append(ipt.ip_new(ip, rule[0], rule[2]))
+            if apply_rule:
+              rules.append(ipt.ip_new(ip, rule[0], rule[2]))
+            else:
+              rules.append(ipt.ip_remove(ip, rule[0], rule[2]))
 
+    if 'loopback_assigned' not in self.rules:
+      # internal network must be able to access outside world
+      rules = rules + self.split_multiline_rules(ipt.loopback_safe())
+      self.rules['loopback_assigned'] = True
+
+    log('Applying rules:')
     return [(None if debug else subprocess.Popen(
       rule.split(' '), 
       stdout=subprocess.PIPE, 
@@ -127,6 +184,14 @@ def main(argv):
 
   log('Loading any previous rules.')
   rules.load()
+
+  # check server uptime to see if it's been restarted since last check
+  with open('/proc/uptime', 'r') as f:
+    uptime_seconds = float(f.readline().split()[0])
+    uptime_seconds = 0
+    if uptime_seconds < rules.rules['uptime']:
+      rules.restarted = True
+    rules.rules['uptime'] = uptime_seconds
 
   log('Loading config.')
   try:
@@ -169,23 +234,6 @@ def main(argv):
     log('Could not find a config file for this server')
     return 0
 
-  try:
-    if 'block_all' not in server_rules:
-      server_rules['block_all'] = False
-
-    if server_rules['block_all'] == True and 'block_all_assigned' not in rules.rules:
-      log('Blocking all incoming connections.')
-      ipt.block_all()
-      rules.rules['block_all_assigned'] = True
-      del rules.rules['allow_all_assigned']
-    elif server_rules['block_all'] == False and 'allow_all_assigned' not in rules.rules:
-      log('Allowing all incoming connections.')
-      ipt.allow_all()
-      rules.rules['allow_all_assigned'] = True
-      del rules.rules['block_all_assigned']
-  except KeyError:
-    pass
-
   # Add any defined safe IPs so the list of firewall rules list.
   for ip in server_rules['safe_ips']:
     rules.add_allowed_ip(ip)
@@ -195,9 +243,24 @@ def main(argv):
   for port_rule in server_rules['firewall']:
     rules.add_port_rule(*port_rule)
 
-  # Add all our found server ips to the firewall rules list.
-  for ip in found_ips:
-    if ip not in rules.rules['allowed_ips']:
+  # Remove any open ports that might have been removed from config
+  for e_key, e_rule in copy(rules.rules['ports']).iteritems():
+    e_rule = list(e_rule)
+    for rule in server_rules['firewall']:
+      if not e_rule[0] == rule[0]:
+        continue
+
+      if len(e_rule) == 4:
+        del e_rule[3]
+
+      key = rules.build_port_rule_key(*rule)
+      if key not in rules.rules['ports'] or not e_rule == rule:
+        log("Removing port rule: %s:%s:%s" % tuple(e_rule))
+        rules.remove_port_rule(*e_rule)
+
+  # Remove any ips that are no longer part of the network
+  for ip in copy(rules.rules['allowed_ips']):
+    if ip not in found_ips:
       rules.remove_allowed_ip(ip)
 
   # This server is acting as a ping server too, we must open the port.
@@ -205,9 +268,8 @@ def main(argv):
   if server_rules['server'] == True:
     rules.add_port_rule(server_rules['server_port'], 'all', 'tcp')
 
-  rules.update_firewall()
+  rules.update_firewall(server_rules)
   rules.save() # save the rules for comparison later
-  ipt.loopback_safe() # internal network must be able to access outside world
   os.unlink(pid_path)
   log('Complete.')
   return 0
