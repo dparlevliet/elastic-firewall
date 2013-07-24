@@ -243,11 +243,6 @@ def main(argv):
     rules.add_allowed_ip(ip)
     found_ips.append(ip)
 
-  # Assign all our port rules to the firewall rules list.
-  for port_rule in server_rules['firewall']:
-    rules.add_port_rule(*port_rule)
-
-  # Remove any open ports that might have been removed from config
   for e_key, e_rule in copy(rules.rules['ports']).iteritems():
     e_rule = list(e_rule)
     for rule in server_rules['firewall']:
@@ -261,6 +256,10 @@ def main(argv):
       if key not in rules.rules['ports'] or not e_rule == rule:
         log("Removing port rule: %s:%s:%s" % tuple(e_rule))
         rules.remove_port_rule(*e_rule)
+  
+  # Assign all our port rules to the firewall rules list.
+  for port_rule in server_rules['firewall']:
+    rules.add_port_rule(*port_rule) 
 
   # Remove any ips that are no longer part of the network
   for ip in copy(rules.rules['allowed_ips']):
