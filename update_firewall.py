@@ -28,15 +28,17 @@ pid_path    = '/var/run/elastic-firewall-update.pid'
 log_path    = '/var/log/elastic-firewall/firewall.log'
 rules_path  = '/var/log/elastic-firewall/rules.pickle'
 
-debug    = False
-api      = None
+debug       = False
+api         = None
 
 
 def log(output):
   output = "[%s] %s" % (time.ctime(), output)
   if debug:
     print output
-  open(log_path, 'a').write("\n%s" % output)
+  if not os.path.exists(os.path.dirname(log_path)):
+    os.makedirs(os.path.dirname(log_path))
+  open(log_path, 'a+').write("\n%s" % output)
 
 
 class ElasticRules():
@@ -48,7 +50,7 @@ class ElasticRules():
   }
 
   def __init__(self):
-    ipt.current_rules = ipt.rules_list()
+    self.current_rules = ipt.rules_list()
 
   def build_port_rule_key(self, port, whom, type):
     key = "%s:%s:%s" % (port, type, whom)
@@ -87,7 +89,9 @@ class ElasticRules():
       if not allowed:
         del self.rules['allowed_ips'][ip]
 
-    return open(rules_path, 'w').write(pickle.dumps(self.rules))
+    if not os.path.exists(os.path.dirname(rules_path)):
+      os.makedirs(os.path.dirname(rules_path))
+    return open(rules_path, 'w+').write(pickle.dumps(self.rules))
 
   def split_multiline_rules(self, rules):
     new_rules = []
@@ -103,20 +107,17 @@ class ElasticRules():
         server_rules['block_all'] = False
 
       if (server_rules['block_all'] == True \
-            and 'block_all_assigned' not in self.rules) \
-            or self.restarted == False:
+            or self.restarted == True) \
+            and '-P INPUT DROP' not in self.current_rules:
         log('Blocking all incoming connections.')
         rules = rules + self.split_multiline_rules(ipt.block_all())
-        self.rules['block_all_assigned'] = True
-        del self.rules['allow_all_assigned']
 
       elif (server_rules['block_all'] == False \
-            and 'allow_all_assigned' not in self.rules) \
-            or self.restarted == True:
+            or self.restarted == True) \
+            and '-P INPUT ACCEPT' not in self.current_rules:
         log('Allowing all incoming connections.')
         rules = rules + self.split_multiline_rules(ipt.allow_all())
-        self.rules['allow_all_assigned'] = True
-        del self.rules['block_all_assigned']
+
     except KeyError:
       pass
 
@@ -153,10 +154,9 @@ class ElasticRules():
       if not rule[1] == 'all' and server_rules['block_all'] == False:
         rules.append(ipt.block_all_on_port(rule[0]))
 
-    if 'loopback_assigned' not in self.rules:
+    if '-A OUTPUT -o lo -j ACCEPT' not in self.current_rules:
       # internal network must be able to access outside world
       rules = rules + self.split_multiline_rules(ipt.loopback_safe())
-      self.rules['loopback_assigned'] = True
 
     log('Applying rules:')
     return [(None if debug else subprocess.Popen(
@@ -177,7 +177,7 @@ def main(argv):
       debug = True
 
   log("Lock the process so we do not double up running tasks.")
-  pid = open(pid_path, 'w')
+  pid = open(pid_path, 'w+')
   try:
     fcntl.lockf(pid, fcntl.LOCK_EX | fcntl.LOCK_NB)
   except IOError:
