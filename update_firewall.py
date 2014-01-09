@@ -99,6 +99,12 @@ class ElasticRules():
       new_rules.append(rule.lstrip().replace(';', ''))
     return new_rules
 
+  def _is_rule(self, rule):
+    for _r in self.current_rules:
+      if rule in _r:
+        return True
+    return False
+
   def update_firewall(self, server_rules):
     rules = []
 
@@ -137,19 +143,14 @@ class ElasticRules():
       # restrict port to all servers in the allowed list
       elif rule[1] == 'allowed':
         for ip in self.rules['allowed_ips']:
-          if self.rules['allowed_ips'][ip] == True and apply_rule:
-            rules.append(ipt.ip_new(ip, rule[0], rule[2]))
-          else:
-            rules.append(ipt.ip_remove(ip, rule[0], rule[2]))
+          rules.append(getattr(ipt, 'ip_new' if self.rules['allowed_ips'][ip] == True \
+                          and apply_rule else 'ip_remove')(ip, rule[0], rule[2]))
 
       # restrict port to certain servers
       elif type(rule[1]) == list:
         for host in rule[1]:
           for ip in api.get_servers(host):
-            if apply_rule:
-              rules.append(ipt.ip_new(ip, rule[0], rule[2]))
-            else:
-              rules.append(ipt.ip_remove(ip, rule[0], rule[2]))
+            rules.append(getattr(ipt, 'ip_new' if apply_rule else 'ip_remove')(ip, rule[0], rule[2]))
 
       if not rule[1] == 'all' and server_rules['block_all'] == False:
         rules.append(ipt.block_all_on_port(rule[0]))
@@ -158,12 +159,22 @@ class ElasticRules():
       # internal network must be able to access outside world
       rules = rules + self.split_multiline_rules(ipt.loopback_safe())
 
+    log('Checking for duplicates:')
+    final_rules = []
+    for rule in rules:
+      if not self._is_rule(rule.replace('iptables -A INPUT', '')):
+        final_rules.append(rule)
+
+    if len(final_rules) == 0:
+      log('No new rules to add.')
+      return []
+
     log('Applying rules:')
     return [(None if debug else subprocess.Popen(
       rule.split(' '), 
       stdout=subprocess.PIPE, 
       stderr=subprocess.PIPE
-    ), log(rule)) for rule in rules if not rule == None]
+    ), log(rule)) for rule in final_rules if not rule == None]
 
 
 def main(argv):
