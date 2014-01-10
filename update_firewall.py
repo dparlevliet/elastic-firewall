@@ -225,7 +225,7 @@ def main(argv):
       setattr(api, key, config[config['server_group']][key])
     api.grab_servers()
   except Exception, e:
-    log(e)
+    log('Error: %s' % e)
     return 1
 
   found_ips = []
