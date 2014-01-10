@@ -37,7 +37,7 @@ Ubuntu Dependency Installation
 ```
 apt-get update; \
 apt-get install -y --force-yes software-properties-common python2.7-dev python-software-properties git python-pip python-crypto; \
-add-apt-repository ppa:richarvey/nodejs; \
+yes w | add-apt-repository ppa:richarvey/nodejs; \
 apt-get update; \
 apt-get install -y --force-yes nodejs npm; \
 yes w | pip install netifaces; \
