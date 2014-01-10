@@ -36,3 +36,8 @@ nosetests.xml
 config.json
 rules.json
 .dropbox
+
+api/*
+!api/__init__.py
+!api/digital_ocean.py
+!api/standalone.py
