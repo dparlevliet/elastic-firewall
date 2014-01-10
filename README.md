@@ -35,11 +35,13 @@ Dependencies
 Ubuntu Dependency Installation
 ==============================
 ```
-apt-get install software-properties-common python-software-properties git python-crypto; \
+apt-get update; \
+apt-get install -y --force-yes software-properties-common python-software-properties git python-pip python-crypto; \
 add-apt-repository ppa:richarvey/nodejs; \
 apt-get update; \
-apt-get install nodejs npm; \
-npm install -g forever moment;
+yes w | apt-get install nodejs npm; \
+yes w | pip install netifaces; \
+yes w | npm install -g forever moment;
 ```
 
 
