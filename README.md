@@ -36,7 +36,7 @@ Ubuntu Dependency Installation
 ==============================
 ```
 apt-get update; \
-apt-get install -y --force-yes software-properties-common python-software-properties git python-pip python-crypto; \
+apt-get install -y --force-yes software-properties-common python2.7-dev python-software-properties git python-pip python-crypto; \
 add-apt-repository ppa:richarvey/nodejs; \
 apt-get update; \
 apt-get install -y --force-yes nodejs npm; \
