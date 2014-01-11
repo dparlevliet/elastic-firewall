@@ -1,7 +1,7 @@
 /*
 @fileoverview Elastic Firewall Server
 @author David Parlevliet
-@version 20130706
+@version 20140111
 @preserve Copyright 2013 David Parlevliet.
 
 Elastic Firewall Server
@@ -20,6 +20,7 @@ var server_config = {};
 var hostname      = fs.readFileSync('/etc/hostname', 'utf8');
 hostname          = hostname.replace("\n", '');
 var config        = fs.readFileSync(__dirname+'/config.json', 'utf8');
+var cron          = null;
 
 var log = function(message) {
   if (arguments.length==1)
@@ -29,11 +30,36 @@ var log = function(message) {
 };
 
 var Server = function() {
-  this.start    = function() {
-    console.log('Pinging everyone.');
+  this.start = function() {
+
+    log("I'm online! Pinging everyone.");
     exec("python "+__dirname+"/pinger.py", function(error, stdout, stderr) {
       sys.puts(stdout);
     });
+
+    if (typeof(server_config.cron) != 'undefined' && parseInt(server.cron) > 0) {
+      clearInterval(cron);
+      cron = setInterval(function() {
+        console.log('Updating firewall');
+        exec("python "+__dirname+"/update_firewall.py", function(error, stdout, stderr) {
+          if (stdout) log(stdout);
+          if (stderr) log(stderr);
+        });
+      }, parseInt(server_config.cron));
+    }
+
+    // Make sure the user hasn't ballsed up the config file.
+    if (typeof(server_config.server_port) == 'undefined') {
+      log('Not starting server because "server_port" is undefined.');
+      return;
+    }
+
+    if (parseInt(server.server_port) < 0 || parseInt(server.server_port) > 65535) {
+      log('There was an error processing your port number. Port numbers must be between 1-65535.');
+      return;
+    }
+
+    // Create the socket to receive online notifications
     this.server = net.createServer(function (socket) {
       log('Connection received');
       if (!server_config.server) {
@@ -65,6 +91,7 @@ var Server = function() {
     }).listen(server_config.server_port, function() {
       log('Server bound');
     });
+    //
   }
 }
 var server = new Server();
@@ -73,8 +100,11 @@ try {
   config = JSON.parse(config);
   for (key in config.hostnames) {
     var re = new RegExp(key);
-    if (key == hostname || re.exec(hostname))
-      server_config = config.hostnames[key];
+    if (key == hostname || re.exec(hostname)) {
+      for (var attr in config.hostnames[key]) {
+        server_config[attr] = config.hostnames[key][attr];
+      }
+    }
   }
   server.start();
 } catch (e) {
