@@ -10,6 +10,7 @@ Class to work for a stand alone dedicated server
 """
 import socket
 import netifaces
+import re
 
 class Api():
   group_name  = "Standalone Server"
