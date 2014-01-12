@@ -157,25 +157,26 @@ class ElasticRules():
       # no restriction on this port, anyone can connect.
       if rule[1] == 'all':
         if apply_rule:
-          rules.append(ipt.all_new(rule[0], rule[2]))
+          _rule = ipt.all_new(rule[0], rule[2])
         else:
-          rule = ipt.all_remove(rule[0], rule[2])
-          rules.append(rule)
-          current_rule = rule.replace('-D', '-A').replace('iptables ', '')
-          if current_rule in self.current_rules:
-            del self.current_rules[current_rule]
+          _rule = ipt.all_remove(rule[0], rule[2])
 
       # restrict port to all servers in the allowed list
       elif rule[1] == 'allowed':
         for ip in self.rules['allowed_ips']:
-          rules.append(getattr(ipt, 'ip_new' if self.rules['allowed_ips'][ip] == True \
-                          and apply_rule else 'ip_remove')(ip, rule[0], rule[2]))
+          _rule = getattr(ipt, 'ip_new' if self.rules['allowed_ips'][ip] == True \
+                          and apply_rule else 'ip_remove')(ip, rule[0], rule[2])
 
       # restrict port to certain servers
       elif type(rule[1]) == list:
         for host in rule[1]:
           for ip in api.get_servers(host):
-            rules.append(getattr(ipt, 'ip_new' if apply_rule else 'ip_remove')(ip, rule[0], rule[2]))
+            _rule = getattr(ipt, 'ip_new' if apply_rule else 'ip_remove')(ip, rule[0], rule[2])
+            
+      rules.append(_rule)
+      current_rule = _rule.replace('-D', '-A').replace('iptables ', '')
+      if current_rule in self.current_rules:
+        del self.current_rules[current_rule]
 
       # block everything on this port if block_all is false and we only want those on the allow list to access it
       if 'block_all' in server_rules and not rule[1] == 'all' and server_rules['block_all'] == False:
