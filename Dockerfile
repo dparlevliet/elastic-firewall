@@ -11,5 +11,5 @@ RUN     yes w | add-apt-repository ppa:richarvey/nodejs
 RUN     apt-get update
 RUN	apt-get install -y --force-yes nodejs npm
 RUN     yes w | npm install -g forever moment
-RUN     yes w | pip install netifaces
+RUN     yes w | pip install netifaces requests
 CMD	/usr/local/share/elastic-firewall/install.sh

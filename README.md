@@ -40,7 +40,7 @@ apt-get install -y --force-yes software-properties-common python2.7-dev python-s
 yes w | add-apt-repository ppa:richarvey/nodejs; \
 apt-get update; \
 apt-get install -y --force-yes nodejs npm; \
-yes w | pip install netifaces; \
+yes w | pip install netifaces requests; \
 yes w | npm install -g forever moment;
 ```
 

@@ -8,7 +8,7 @@ Digital Ocean API
 =================
 Class to get the server details via the Digital Ocean API.
 """
-import urllib2
+import requests
 import json
 import re
 
@@ -29,12 +29,12 @@ class Api():
                         self.api_key)
 
     try:
-      droplets      = urllib2.urlopen(DROPLETS_URL)
-    except urllib2.URLError:
+      droplets = requests.get(DROPLETS_URL)
+    except:
       raise Exception("Fatal error: Unable to connect to API")
 
     try:
-      data        = json.loads(droplets.read())
+      data        = json.loads(droplets.text)
     except:
       raise Exception("Fatal error: No droplets found")
 
