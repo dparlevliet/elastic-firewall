@@ -38,9 +38,10 @@ var Server = function() {
     });
 
     if (typeof(server_config.cron) != 'undefined' && parseInt(server.cron) > 0) {
+      log('Starting cron job ...');
       clearInterval(cron);
       cron = setInterval(function() {
-        console.log('Updating firewall');
+        log('Cron: Updating firewall.');
         exec("python "+__dirname+"/update_firewall.py", function(error, stdout, stderr) {
           if (stdout) log(stdout);
           if (stderr) log(stderr);
