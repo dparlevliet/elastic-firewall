@@ -43,7 +43,7 @@ var Server = function() {
       sys.puts(stdout);
     });
 
-    if (typeof(server_config.cron) != 'undefined' && parseInt(server.cron) > 0) {
+    if (typeof(server_config.cron) != 'undefined' && parseInt(server_config.cron) > 0) {
       log('Starting cron job ...');
       clearInterval(cron);
       cron = setInterval(function() {
