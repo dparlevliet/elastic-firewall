@@ -119,7 +119,7 @@ class ElasticRules():
 
   def _check_rule_state(self, rule):
     if '-D' in rule:
-      current_rule = _rule.replace('-D', '-A').replace('iptables ', '')
+      current_rule = rule.replace('-D', '-A').replace('iptables ', '')
       if current_rule in self.current_rules:
         del self.current_rules[current_rule]
 
