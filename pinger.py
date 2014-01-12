@@ -69,14 +69,15 @@ def main():
       
     log('Config found at: %s' % c_hostname)
     server_rules = config['hostnames'][c_hostname]
-    for server in server_rules['ping']:
-      for c_hostname in config['hostnames']:
-        if not re.match(c_hostname, server):
-          continue
+    if 'ping' in server_rules:
+      for server in server_rules['ping']:
+        for c_hostname in config['hostnames']:
+          if not re.match(c_hostname, server):
+            continue
 
-        receiver_rules = config['hostnames'][c_hostname]
-        for ip in api.get_servers(server):
-          ping(ip, server_rules['server_port'], receiver_rules['bsalt'], receiver_rules['api_key'])
+          receiver_rules = config['hostnames'][c_hostname]
+          for ip in api.get_servers(server):
+            ping(ip, server_rules['server_port'], receiver_rules['bsalt'], receiver_rules['api_key'])
 
   return 0
 
