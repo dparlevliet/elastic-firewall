@@ -117,6 +117,12 @@ class ElasticRules():
       stderr=subprocess.PIPE
     )
 
+  def _check_rule_state(self, rule):
+    if '-D' in rule:
+      current_rule = _rule.replace('-D', '-A').replace('iptables ', '')
+      if current_rule in self.current_rules:
+        del self.current_rules[current_rule]
+
   def update_firewall(self, server_rules):
     rules = []
 
@@ -160,20 +166,14 @@ class ElasticRules():
           _rule = ipt.all_new(rule[0], rule[2])
         else:
           _rule = ipt.all_remove(rule[0], rule[2])
-        rules.append(_rule)
-        current_rule = _rule.replace('-D', '-A').replace('iptables ', '')
-        if current_rule in self.current_rules:
-          del self.current_rules[current_rule]
+        self._check_rule_state(_rule)
 
       # restrict port to all servers in the allowed list
       elif rule[1] == 'allowed':
         for ip in self.rules['allowed_ips']:
           _rule = getattr(ipt, 'ip_new' if self.rules['allowed_ips'][ip] == True \
                           and apply_rule else 'ip_remove')(ip, rule[0], rule[2])
-          rules.append(_rule)
-          current_rule = _rule.replace('-D', '-A').replace('iptables ', '')
-          if current_rule in self.current_rules:
-            del self.current_rules[current_rule]
+          self._check_rule_state(_rule)
 
       # restrict port to certain servers
       elif type(rule[1]) == list:
@@ -181,9 +181,7 @@ class ElasticRules():
           for ip in api.get_servers(host):
             _rule = getattr(ipt, 'ip_new' if apply_rule else 'ip_remove')(ip, rule[0], rule[2])
             rules.append(_rule)
-            current_rule = _rule.replace('-D', '-A').replace('iptables ', '')
-            if current_rule in self.current_rules:
-              del self.current_rules[current_rule]
+            self._check_rule_state(_rule)
 
       # block everything on this port if block_all is false and we only want those on the allow list to access it
       if 'block_all' in server_rules and not rule[1] == 'all' and server_rules['block_all'] == False:
