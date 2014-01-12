@@ -162,7 +162,7 @@ class ElasticRules():
           rule = ipt.all_remove(rule[0], rule[2])
           rules.append(rule)
           current_rule = rule.replace('-D', '-A').replace('iptables ', '')
-          if current_rule in self.current_rules
+          if current_rule in self.current_rules:
             del self.current_rules[current_rule]
 
       # restrict port to all servers in the allowed list
