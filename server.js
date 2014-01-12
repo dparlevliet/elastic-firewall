@@ -21,12 +21,18 @@ var hostname      = fs.readFileSync('/etc/hostname', 'utf8');
 hostname          = hostname.replace("\n", '');
 var config        = fs.readFileSync(__dirname+'/config.json', 'utf8');
 var cron          = null;
+var log_file      = '/var/log/elastic-firewall/server.log';
 
 var log = function(message) {
-  if (arguments.length==1)
-    console.log('['+moment().format('D-MMMM-YY h:mm:ss')+'] '+ message);
-  else
+  if (arguments.length==1) {
+    message = '['+moment().format('D-MMMM-YY h:mm:ss')+'] '+ message;
+    console.log(message);
+    fs.appendFile(log_file, message, function (err) {
+      console.log(err);
+    });
+  } else {
     console.log('['+moment().format('D-MMMM-YY h:mm:ss')+']', arguments);
+  }
 };
 
 var Server = function() {
