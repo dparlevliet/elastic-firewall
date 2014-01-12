@@ -159,7 +159,10 @@ class ElasticRules():
         if apply_rule:
           rules.append(ipt.all_new(rule[0], rule[2]))
         else:
-          rules.append(ipt.all_remove(rule[0], rule[2]))
+          rule = ipt.all_remove(rule[0], rule[2])
+          rules.append(rule)
+          if rule.replace('-D', '-A') self.current_rules
+            del self.current_rules[rule.replace('-D', '-A')]
 
       # restrict port to all servers in the allowed list
       elif rule[1] == 'allowed':
