@@ -52,7 +52,7 @@ var Server = function() {
           if (stdout) log(stdout);
           if (stderr) log(stderr);
         });
-      }, parseInt(server_config.cron));
+      }, parseInt(server_config.cron * 1000));
     }
 
     // Make sure the user hasn't ballsed up the config file.
