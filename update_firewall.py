@@ -166,6 +166,7 @@ class ElasticRules():
           _rule = ipt.all_new(rule[0], rule[2])
         else:
           _rule = ipt.all_remove(rule[0], rule[2])
+        rules.append(_rule)
         self._check_rule_state(_rule)
 
       # restrict port to all servers in the allowed list
@@ -173,6 +174,7 @@ class ElasticRules():
         for ip in self.rules['allowed_ips']:
           _rule = getattr(ipt, 'ip_new' if self.rules['allowed_ips'][ip] == True \
                           and apply_rule else 'ip_remove')(ip, rule[0], rule[2])
+          rules.append(_rule)
           self._check_rule_state(_rule)
 
       # restrict port to certain servers
@@ -329,6 +331,7 @@ def main(argv):
       Assign all current/new port rules
       """
       for port_rule in server_rules['firewall']:
+        log("Adding port rule %s:%s:%s" % tuple(port_rule))
         rules.add_port_rule(*port_rule) 
 
     """
@@ -360,8 +363,8 @@ def main(argv):
   """
   Save the current rules for comparison later
   """
-  #if not debug:
-  rules.save() 
+  if not debug:
+    rules.save() 
 
   os.unlink(pid_path)
   log('Complete.')
