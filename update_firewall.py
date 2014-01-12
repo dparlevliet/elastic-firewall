@@ -52,6 +52,10 @@ class ElasticRules():
 
   def __init__(self):
     self.current_rules = ipt.rules_list()
+    log('<<< Found existing rules:')
+    for rule in self.current_rules:
+      log(rule)
+    log('<<< End')
 
   def build_port_rule_key(self, port, whom, type):
     key = "%s:%s:%s" % (port, type, whom)
@@ -121,7 +125,7 @@ class ElasticRules():
     """
     try:
       if 'block_all' not in server_rules:
-        server_rules['block_all'] = False
+        raise Exception('Not modifying block rules')
 
       if (server_rules['block_all'] == True \
             or self.restarted == True) \
@@ -137,6 +141,8 @@ class ElasticRules():
 
     except KeyError:
       pass
+    except Exception, e:
+      log(e)
 
     """
     Look at all the port rules
@@ -168,7 +174,7 @@ class ElasticRules():
             rules.append(getattr(ipt, 'ip_new' if apply_rule else 'ip_remove')(ip, rule[0], rule[2]))
 
       # block everything on this port if block_all is false and we only want those on the allow list to access it
-      if not rule[1] == 'all' and server_rules['block_all'] == False:
+      if 'block_all' in server_rules and not rule[1] == 'all' and server_rules['block_all'] == False:
         rules.append(ipt.block_all_on_port(rule[0]))
 
     """
@@ -183,9 +189,11 @@ class ElasticRules():
     log('Checking for duplicates ...')
     final_rules = []
     for rule in rules:
-      if not self._is_rule(rule.replace('iptables -A INPUT', '')):
+      if not self._is_rule(rule.replace('iptables ', '')):
         self.current_rules[rule] = True
         final_rules.append(rule)
+      else:
+        log('<<< Removing duplicate: %s' % rule)
 
     if len(final_rules) == 0:
       log('No new rules to add.')
@@ -342,8 +350,8 @@ def main(argv):
   """
   Save the current rules for comparison later
   """
-  if not debug:
-    rules.save() 
+  #if not debug:
+  rules.save() 
 
   os.unlink(pid_path)
   log('Complete.')
