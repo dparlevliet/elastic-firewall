@@ -27,7 +27,7 @@ var log = function(message) {
   if (arguments.length==1) {
     message = '['+moment().format('D-MMMM-YY h:mm:ss')+'] '+ message;
     console.log(message);
-    fs.appendFile(log_file, message, function (err) {
+    fs.appendFile(log_file, message+"\n", function (err) {
       console.log(err);
     });
   } else {
