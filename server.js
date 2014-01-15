@@ -57,8 +57,8 @@ var Server = function() {
 
     // Make sure the user hasn't ballsed up the config file.
     if (typeof(server_config.server_port) == 'undefined') {
-      log('Not starting server because "server_port" is undefined.');
-      return;
+      log('server_port was undefined, defaulting to 23565');
+      server_config['server_port'] = 23565;
     }
 
     if (parseInt(server.server_port) < 0 || parseInt(server.server_port) > 65535) {
