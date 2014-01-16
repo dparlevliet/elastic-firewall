@@ -189,11 +189,19 @@ class ElasticRules():
       if 'block_all' in server_rules and not rule[1] == 'all' and server_rules['block_all'] == False:
         rules.append(ipt.block_all_on_port(rule[0]))
 
+
     """
     Internal network must be able to access outside world
     """
     if '-A OUTPUT -o lo -j ACCEPT' not in self.current_rules:
       rules = rules + self.split_multiline_rules(ipt.loopback_safe())
+
+    """
+    Network must be able to establish connections. Ensure this is always on.
+    """
+    if '-P INPUT DROP' in self.current_rules and \
+        '-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT' not in self.current_rules:
+      rules.append('iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')        
 
     """
     Look at all currently applied rules and make sure we aren't reapplying them
