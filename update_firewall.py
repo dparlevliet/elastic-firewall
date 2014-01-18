@@ -111,11 +111,12 @@ class ElasticRules():
     return False
 
   def _execute_rule(self, rule):
-    return subprocess.Popen(
+    self.current_rules[rule.replace('iptables ', '')] = True
+    return (None if debug else subprocess.Popen(
       rule.split(' '), 
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE
-    )
+    ), log(rule))
 
   def _check_rule_state(self, rule):
     if '-D' in rule:
@@ -197,20 +198,12 @@ class ElasticRules():
       rules = rules + self.split_multiline_rules(ipt.loopback_safe())
 
     """
-    Network must be able to establish connections. Ensure this is always on.
-    """
-    if '-P INPUT DROP' in self.current_rules and \
-        '-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT' not in self.current_rules:
-      rules.append('iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')        
-
-    """
     Look at all currently applied rules and make sure we aren't reapplying them
     """
     log('Checking for duplicates ...')
     final_rules = []
     for rule in rules:
       if not self._is_rule(rule.replace('iptables ', '')):
-        self.current_rules[rule] = True
         final_rules.append(rule)
       else:
         log('<<< Removing duplicate: %s' % rule)
@@ -223,7 +216,7 @@ class ElasticRules():
     Apply all the rules if not in debug mode, otherwise output them
     """
     log('Applying rules:')
-    return [(None if debug else self._execute_rule(rule), log(rule)) for rule in final_rules if not rule == None]
+    return [self._execute_rule(rule) for rule in final_rules if not rule == None]
 
 
 def main(argv):
@@ -249,6 +242,13 @@ def main(argv):
     return 1
 
   rules = ElasticRules()
+
+  """
+  Network must be able to establish connections. Ensure this is always on.
+  """
+  if '-P INPUT DROP' in rules.current_rules and \
+      '-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT' not in rules.current_rules:
+    rules._execute_rule('iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
 
   log('Loading any previous rules.')
   rules.load()
