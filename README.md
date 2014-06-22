@@ -246,6 +246,27 @@ tail -f /var/log/elastic-firewall/firewall.log
 ```
 
 
+Testing with Docker
+===================
+```
+docker build -t firewall .
+docker run -v "/usr/local/share/elastic-firewall/:/usr/local/share/elastic-firewall/" -i -t firewall /bin/bash
+cd /usr/local/share/elastic-firewall/;
+nano config.json;
+python update_firewall.sh --test-mode
+```
+
+
+Testing with Vagrant
+====================
+```
+vagrant up
+vagrant ssh
+cd /usr/local/share/elastic-firewall/;
+nano config.json;
+```
+
+
 Notes
 =====
 You do not need to restart the service if you make changes to the config file, 
