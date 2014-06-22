@@ -264,6 +264,7 @@ vagrant up
 vagrant ssh
 cd /usr/local/share/elastic-firewall/;
 nano config.json;
+python update_firewall.sh --test-mode
 ```
 
 
