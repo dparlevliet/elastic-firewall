@@ -66,7 +66,7 @@ below or equal to 56 characters.
 ```
 {
   "server_group": "standalone",
-  "digital_ocean": {},
+  "standalone": {},
   "hostnames": {
     "elastic-firewall": {
       "api_key": "=MGuNrNGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
