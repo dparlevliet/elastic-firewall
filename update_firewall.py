@@ -62,19 +62,23 @@ class ElasticRules():
     return key
 
   def add_port_rule(self, port, whom, type):
+    log(">>> Added port rule [%s, %s, %s]" % (port, whom, type))
     key = self.build_port_rule_key(port, whom, type)
     self.rules['ports'][key] = (port, whom, type, True)
 
   def remove_port_rule(self, port, whom, type):
+    log(">>> Removed port rule [%s, %s, %s]" % (port, whom, type))
     key = self.build_port_rule_key(port, whom, type)
     if key not in self.rules['ports']:
       return None
     self.rules['ports'][key] = (port, whom, type, False)
 
   def add_allowed_ip(self, ip):
+    log(">>> Added ip to allowed list: %s" % ip)
     self.rules['allowed_ips'][ip] = True
 
   def remove_allowed_ip(self, ip):
+    log(">>> Removed ip from allowed list: %s" % ip)
     self.rules['allowed_ips'][ip] = False
 
   def load(self):
@@ -87,6 +91,7 @@ class ElasticRules():
         self.rules['uptime'] = 0
 
     except:
+      log("<<< Unexpected error loading previous rules")
       pass
 
   def save(self):
@@ -111,6 +116,7 @@ class ElasticRules():
     return False
 
   def _execute_rule(self, rule):
+    log("<<< Expecting to execute rule: '%s'" % rule)
     self.current_rules[rule.replace('iptables ', '')] = True
     return (None if debug else subprocess.Popen(
       rule.split(' '), 
@@ -206,7 +212,7 @@ class ElasticRules():
       if not self._is_rule(rule.replace('iptables ', '')):
         final_rules.append(rule)
       else:
-        log('<<< Removing duplicate: %s' % rule)
+        log('<<< Rule already exists in chain: %s' % rule)
 
     if len(final_rules) == 0:
       log('No new rules to add.')
@@ -233,6 +239,7 @@ def main(argv):
     if arg.lower() == '--test-mode':
       debug = True
 
+  log('-----------------------------------------------------------------------')
   log("Locking the process.")
   pid = open(pid_path, 'w+')
   try:
@@ -247,7 +254,8 @@ def main(argv):
   Network must be able to establish connections. Ensure this is always on.
   """
   if '-P INPUT DROP' in rules.current_rules and \
-      '-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT' not in rules.current_rules:
+      ('-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT' not in rules.current_rules and
+        '-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT' not in rules.current_rules):
     rules._execute_rule('iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
 
   log('Loading any previous rules.')
@@ -376,6 +384,7 @@ def main(argv):
 
   os.unlink(pid_path)
   log('Complete.')
+  log("-----------------------------------------------------------------------\n")
   return 0
 
 
