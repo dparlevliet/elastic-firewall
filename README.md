@@ -56,6 +56,7 @@ update-rc.d elastic-firewall defaults; \
 cp /usr/local/share/elastic-firewall/config-sample.json /usr/local/share/elastic-firewall/config.json;
 ```
 
+
 Example config
 ==============
 The config for this application is stored using JSON. If you have trouble coming
@@ -64,11 +65,8 @@ Also, note that the salt for Blowfish cannot exceed 448 bits, so keep your bsalt
 below or equal to 56 characters.
 ```
 {
-  "server_group": "digital_ocean",
-  "digital_ocean": {
-    "client_key": "abcd",
-    "api_key": "abcde"
-  },
+  "server_group": "standalone",
+  "digital_ocean": {},
   "hostnames": {
     "elastic-firewall": {
       "api_key": "=MGuNrNGg6dEap1lle#w;eC1QEwC_ncJV^aOYLA56-,,:oBH5)PF))",
@@ -117,6 +115,21 @@ below or equal to 56 characters.
   }
 }
 ```
+
+
+Digital Ocean API usage
+=======================
+```
+{
+  "server_group": "digital_ocean",
+  "digital_ocean": {
+    "client_key": "abcd",
+    "api_key": "abcde"
+  },
+  ... the rest of your server settings here ...
+}
+```
+
 
 Config explained
 ================
@@ -218,11 +231,20 @@ Config explained
   }
 ```
 
+
 update_firewall.py arguments
 ============================
 ```
 --test-mode       Enables debug mode. iptables commands will run without being applied.
 ```
+
+
+Log file
+========
+```
+tail -f /var/log/elastic-firewall/firewall.log
+```
+
 
 Notes
 =====
