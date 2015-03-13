@@ -134,30 +134,6 @@ class ElasticRules():
     rules = []
 
     """
-    Should we block all inbound port connections as the base rule or explictly allow?
-    """
-    try:
-      if 'block_all' not in server_rules:
-        raise Exception('Not modifying block rules')
-
-      if (server_rules['block_all'] == True \
-            or self.restarted == True) \
-            and '-P INPUT DROP' not in self.current_rules:
-        log('Blocking all incoming connections.')
-        rules = rules + self.split_multiline_rules(ipt.block_all())
-
-      elif (server_rules['block_all'] == False \
-            or self.restarted == True) \
-            and '-P INPUT ACCEPT' not in self.current_rules:
-        log('Allowing all incoming connections.')
-        rules = rules + self.split_multiline_rules(ipt.allow_all())
-
-    except KeyError:
-      pass
-    except Exception, e:
-      log(e)
-
-    """
     Look at all the port rules
     """
     for key, rule in self.rules['ports'].iteritems():
@@ -196,12 +172,35 @@ class ElasticRules():
       if 'block_all' in server_rules and not rule[1] == 'all' and server_rules['block_all'] == False:
         rules.append(ipt.block_all_on_port(rule[0]))
 
-
     """
     Internal network must be able to access outside world
     """
     if '-A OUTPUT -o lo -j ACCEPT' not in self.current_rules:
       rules = rules + self.split_multiline_rules(ipt.loopback_safe())
+
+    """
+    Should we block all inbound port connections as the base rule or explictly allow?
+    """
+    try:
+      if 'block_all' not in server_rules:
+        raise Exception('Not modifying block rules')
+
+      if (server_rules['block_all'] == True \
+            or self.restarted == True) \
+            and '-P INPUT DROP' not in self.current_rules:
+        log('Blocking all incoming connections.')
+        rules = rules + self.split_multiline_rules(ipt.block_all())
+
+      elif (server_rules['block_all'] == False \
+            or self.restarted == True) \
+            and '-P INPUT ACCEPT' not in self.current_rules:
+        log('Allowing all incoming connections.')
+        rules = rules + self.split_multiline_rules(ipt.allow_all())
+
+    except KeyError:
+      pass
+    except Exception, e:
+      log(e)
 
     """
     Look at all currently applied rules and make sure we aren't reapplying them
