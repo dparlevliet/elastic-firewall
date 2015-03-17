@@ -256,6 +256,7 @@ def main(argv):
       ('-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT' not in rules.current_rules and
         '-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT' not in rules.current_rules):
     rules._execute_rule('iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT')
+    rules._execute_rule('iptables -A INPUT -i lo -j ACCEPT')
 
   log('Loading any previous rules.')
   rules.load()
